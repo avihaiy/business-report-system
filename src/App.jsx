@@ -1528,6 +1528,10 @@ export default function App(){
           {page==="myBusinesses"&&user.role==="inspector"&&<MyBusinesses user={user} businesses={businesses} reports={reports} onSaveReport={handleAddReport} />}
           {page==="myReports"&&user.role==="inspector"&&<ReportsPage reports={reports} businesses={businesses} users={users} filterInspectorId={user.id} />}
         </div>
+        {/* Footer */}
+        <div style={{padding:12,textAlign:"center",borderTop:"1px solid rgba(255,255,255,0.04)",color:C.textDim,fontSize:12}}>
+          © {new Date().getFullYear()} Avihai Yosipovich — כל הזכויות שמורות
+        </div>
       </div>
     </div>
   );
