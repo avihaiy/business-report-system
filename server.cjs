@@ -51,6 +51,15 @@ const seed = loadSeed();
 
 app.use(cors());
 app.use(express.json());
+// Serve built client if available
+const DIST_DIR = path.join(__dirname, 'dist');
+if (fs.existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(DIST_DIR, 'index.html'));
+  });
+}
 
 app.get('/api/:collection', (req, res) => {
   const collection = req.params.collection;
