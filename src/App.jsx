@@ -288,7 +288,7 @@ function Stat({icon,value,label,color,delta}){
 function Modal({onClose,children,width=600}){
   return(
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,direction:"rtl",padding:16}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
-      <div style={{background:"#131f38",border:"1px solid rgba(255,255,255,0.1)",borderRadius:22,width,maxWidth:"96vw",maxHeight:"92vh",overflowY:"auto",padding:"32px 36px"}}>
+      <div className="modal-inner" style={{background:"#131f38",border:"1px solid rgba(255,255,255,0.1)",borderRadius:22,width,maxWidth:"96vw",maxHeight:"92vh",overflowY:"auto",padding:"32px 36px"}}>
         {children}
       </div>
     </div>
@@ -632,7 +632,7 @@ function Dashboard({user,reports,businesses,users,setPage}){
   const recent=[...myReports].sort((a,b)=>b.id-a.id).slice(0,5);
 
   return(
-    <div>
+    <div className="page-dashboard">
       {urgentPending.length > 0 && (
         <div onClick={() => setPage("alerts")} className="pulse-urgent" style={{
           background: "rgba(244, 63, 94, 0.08)",
@@ -746,7 +746,7 @@ function ReportsPage({reports,businesses,users,filterInspectorId}){
   });
 
   return(
-    <div>
+    <div className="page-reports">
       <div style={{display:"flex",gap:10,marginBottom:20,flexWrap:"wrap"}}>
         <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 חיפוש חופשי..." style={{...inp,flex:1,minWidth:200}} />
         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -839,7 +839,7 @@ function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setRepo
   });
 
   return(
-    <div>
+    <div className="page-businesses">
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,gap:12,flexWrap:"wrap"}}>
         <div style={{display:"flex",gap:8,flex:1,flexWrap:"wrap"}}>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 חפש עסק..." style={{...inp,flex:"0 1 240px"}} />
@@ -956,7 +956,7 @@ function UsersPage({users,setUsers,businesses,reports}){
   const del=u=>{ if(window.confirm(`למחוק את ${u.name}?`))setUsers(prev=>prev.filter(x=>x.id!==u.id));};
 
   return(
-    <div>
+    <div className="page-users">
       <div style={{display:"flex",justifyContent:"space-between",marginBottom:20}}>
         <p style={{color:C.textDim,fontSize:13,margin:0}}>{users.length} משתמשים · {users.filter(u=>u.role==="inspector").length} מפקחים</p>
         <PrimaryBtn onClick={openNew} icon="👤">משתמש חדש</PrimaryBtn>
@@ -1103,7 +1103,7 @@ function AlertsPage({ notifs, setNotifs, reports, setReports, businesses, user }
   };
 
   return (
-    <div>
+    <div className="page-alerts">
       <div style={{ marginBottom: 32 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div>
@@ -1381,13 +1381,20 @@ export default function App(){
 
         /* Mobile adjustments */
         @media (max-width: 768px) {
-          input, textarea, select { width: 100% !important; box-sizing: border-box; }
-          button { min-width: 0 !important; width: 100% !important; box-sizing: border-box; }
-          .glass-card { padding: 14px !important; }
+          input, textarea, select { width: 100% !important; box-sizing: border-box; font-size: 16px; padding: 12px !important; }
+          button { min-width: 0 !important; width: 100% !important; box-sizing: border-box; padding: 12px 14px !important; font-size: 16px; }
+          .glass-card { padding: 14px !important; border-radius: 12px !important; }
           .sidebar-drawer { width: 100% !important; right: 0 !important; left: 0 !important; }
-          .sidebar-drawer nav button { text-align: right !important; }
+          .sidebar-drawer nav button { text-align: right !important; padding: 12px 14px !important; }
           .pulse-urgent { font-size: 14px; }
           h1 { font-size: 18px !important; }
+          .modal-inner { width: 100% !important; padding: 18px !important; border-radius: 12px !important; max-height: 94vh !important; }
+
+          /* Page-specific tweaks */
+          .page-dashboard .cardStyle, .page-dashboard .glass-card { margin-bottom: 10px; }
+          .page-reports .glass-card, .page-businesses .glass-card, .page-users .glass-card, .page-alerts .glass-card { width: 100% !important; display: block !important; }
+          .page-businesses [style*="gridTemplateColumns"] { grid-template-columns: 1fr !important; }
+          .page-users .avatar, .page-reports .avatar { margin-bottom: 8px; }
         }
       `}</style>
 
