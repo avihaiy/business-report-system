@@ -17,8 +17,31 @@ jobs:
           node-version: 18
       - name: Install dependencies
         run: npm ci
+
+      - name: Ensure local binaries are executable (fix Vite permission issues)
+        run: |
+          if [ -d "./node_modules/.bin" ]; then
+            chmod -R u+rx ./node_modules/.bin || true
+            # ensure vite is executable if present
+            if [ -f "./node_modules/.bin/vite" ]; then chmod u+x ./node_modules/.bin/vite || true; fi
+          fi
+
       - name: Build client
         run: npm run build
+
+      - name: Verify dist
+        run: |
+          if [ -d "dist" ]; then
+            echo "dist generated:" && ls -la dist || true
+          else
+            echo "ERROR: dist not found" && exit 1
+          fi
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
       - name: Build Docker image
         uses: docker/build-push-action@v4
         with:
