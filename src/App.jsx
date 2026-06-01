@@ -374,7 +374,7 @@ function LoginPage({users,onLogin}){
         </div>
       </div>
         {/* Login footer */}
-        <div style={{position:"fixed",left:0,right:0,bottom:0,background:"rgba(6,10,19,0.9)",color:"rgba(248,250,252,0.6)",fontSize:12,padding:"10px 12px",textAlign:"center",borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+        <div style={{position:"fixed",left:0,right:0,bottom:0,background:"rgba(6,10,19,0.95)",color:"rgba(248,250,252,0.9)",fontSize:12,padding:"10px 12px",textAlign:"center",borderTop:"1px solid rgba(255,255,255,0.04)",zIndex:1100}}>
           © {new Date().getFullYear()} Avihai Yosipovich — כל הזכויות שמורות
         </div>
     </div>
