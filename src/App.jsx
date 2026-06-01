@@ -63,6 +63,17 @@ function useDB(){
   const[reports,setR]=useState(SEED_REPORTS);
   const[notifs,setN]=useState(SEED_NOTIFS);
 
+  const storageKey=(key)=>`brs:${key}`;
+  const readLocal=(key)=>{
+    try{
+      const raw=localStorage.getItem(storageKey(key));
+      return raw?JSON.parse(raw):null;
+    }catch{return null;}
+  };
+  const writeLocal=(key,value)=>{
+    try{localStorage.setItem(storageKey(key),JSON.stringify(value));}catch{}
+  };
+
   useEffect(()=>{
     let active=true;
     const loadData=async()=>{
@@ -77,18 +88,22 @@ function useDB(){
         if(!active) return;
 
         const [usersData,businessesData,reportsData,notifsData]=await Promise.all([
-          u.ok?u.json():Promise.reject(),
-          b.ok?b.json():Promise.reject(),
-          r.ok?r.json():Promise.reject(),
-          n.ok?n.json():Promise.reject()
+          u.ok?u.json():Promise.resolve(null),
+          b.ok?b.json():Promise.resolve(null),
+          r.ok?r.json():Promise.resolve(null),
+          n.ok?n.json():Promise.resolve(null)
         ]);
 
-        setU(Array.isArray(usersData)?usersData:SEED_USERS);
-        setB(Array.isArray(businessesData)?businessesData:SEED_BUSINESSES);
-        setR(Array.isArray(reportsData)?reportsData:SEED_REPORTS);
-        setN(Array.isArray(notifsData)?notifsData:SEED_NOTIFS);
+        setU(Array.isArray(usersData)?usersData:readLocal('users')||SEED_USERS);
+        setB(Array.isArray(businessesData)?businessesData:readLocal('businesses')||SEED_BUSINESSES);
+        setR(Array.isArray(reportsData)?reportsData:readLocal('reports')||SEED_REPORTS);
+        setN(Array.isArray(notifsData)?notifsData:readLocal('notifs')||SEED_NOTIFS);
       }catch(e){
         console.warn('Failed to load server data', e);
+        setU(readLocal('users')||SEED_USERS);
+        setB(readLocal('businesses')||SEED_BUSINESSES);
+        setR(readLocal('reports')||SEED_REPORTS);
+        setN(readLocal('notifs')||SEED_NOTIFS);
       }
     };
     loadData();
@@ -98,6 +113,7 @@ function useDB(){
   const mk=(setter,key)=>useCallback(fn=>{
     setter(prev=>{
       const next=typeof fn==='function'?fn(prev):fn;
+      writeLocal(key,next);
       dbSet(key,next);
       return next;
     });
@@ -941,7 +957,7 @@ function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setRepo
 // ════════════════════════════════════════════════════════════
 // USERS PAGE
 // ════════════════════════════════════════════════════════════
-function UsersPage({users,setUsers,businesses,reports}){
+function UsersPage({users,setUsers,businesses,reports,user,setUser}){
   const[modal,setModal]=useState(null);
   const[permModal,setPermModal]=useState(null);
   const[form,setForm]=useState({username:"",password:"",name:"",role:"inspector",email:"",phone:"",active:true});
@@ -955,8 +971,14 @@ function UsersPage({users,setUsers,businesses,reports}){
     if(modal==="new"&&users.find(u=>u.username===form.username)){setErr("שם משתמש כבר קיים");return;}
     setSaving(true);
     setTimeout(()=>{
-      if(modal==="new")setUsers(prev=>[...prev,{...form,id:Date.now(),assignedBusinesses:[],joinDate:new Date().toISOString().split("T")[0]}]);
-      else setUsers(prev=>prev.map(u=>u.id===form.id?{...u,...form}:u));
+      if(modal==="new"){
+        setUsers(prev=>[...prev,{...form,id:Date.now(),assignedBusinesses:[],joinDate:new Date().toISOString().split("T")[0]}]);
+      } else {
+        setUsers(prev=>prev.map(u=>u.id===form.id?{...u,...form}:u));
+        if(user?.id===form.id){
+          setUser(prev=>({...prev,...form}));
+        }
+      }
       setSaving(false);setModal(null);
     },350);
   };
@@ -1552,7 +1574,7 @@ export default function App(){
           {page==="dashboard"&&<Dashboard user={user} reports={reports} businesses={businesses} users={users} setPage={setPage} />}
           {page==="reports"&&user.role==="admin"&&<ReportsPage reports={reports} businesses={businesses} users={users} />}
           {page==="businesses"&&user.role==="admin"&&<BusinessesPage businesses={businesses} setBusinesses={setBusinesses} reports={reports} users={users} setUsers={setUsers} setReports={setReports} />}
-          {page==="users"&&user.role==="admin"&&<UsersPage users={users} setUsers={setUsers} businesses={businesses} reports={reports} />}
+          {page==="users"&&user.role==="admin"&&<UsersPage users={users} setUsers={setUsers} businesses={businesses} reports={reports} user={user} setUser={setUser} />}
           {page==="alerts"&&<AlertsPage notifs={notifs} setNotifs={setNotifs} reports={reports} setReports={setReports} businesses={businesses} user={user} />}
           {page==="myBusinesses"&&user.role==="inspector"&&<MyBusinesses user={user} businesses={businesses} reports={reports} onSaveReport={handleAddReport} />}
           {page==="myReports"&&user.role==="inspector"&&<ReportsPage reports={reports} businesses={businesses} users={users} filterInspectorId={user.id} />}
