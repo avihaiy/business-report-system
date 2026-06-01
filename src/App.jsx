@@ -5,7 +5,29 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContai
 // STORAGE
 // ════════════════════════════════════════════════════════════
 const SK = { USERS:"biz_users", BUSINESSES:"biz_biz", REPORTS:"biz_reports", NOTIFS:"biz_notifs" };
-function dbGet(k,seed){try{const r=localStorage.getItem(k);if(r)return JSON.parse(r);localStorage.setItem(k,JSON.stringify(seed));return seed;}catch{return seed;}}
+function dbGet(k,seed){
+  try{
+    const r=localStorage.getItem(k);
+    if(r){
+      const data=JSON.parse(r);
+      if(Array.isArray(data) && Array.isArray(seed)){
+        const merged = seed.reduce((acc,item)=>{
+          if(!acc.some(x=>x && ((x.id!=null && x.id===item.id) || (x.username && item.username && x.username===item.username)))){
+            acc.push(item);
+          }
+          return acc;
+        },[...data]);
+        if(merged.length!==data.length){
+          localStorage.setItem(k,JSON.stringify(merged));
+          return merged;
+        }
+      }
+      return data;
+    }
+    localStorage.setItem(k,JSON.stringify(seed));
+    return seed;
+  }catch{return seed;}
+}
 function dbSet(k,d){try{localStorage.setItem(k,JSON.stringify(d));}catch{}}
 function dbReset(){Object.values(SK).forEach(k=>localStorage.removeItem(k));}
 
@@ -293,12 +315,6 @@ function LoginPage({users,onLogin}){
           ))}
           {err&&<div style={{background:"rgba(244,63,94,0.1)",border:"1px solid rgba(244,63,94,0.25)",borderRadius:10,padding:"10px 14px",color:"#fca5a5",fontSize:13,marginBottom:14,textAlign:"center"}}>⚠ {err}</div>}
           <PrimaryBtn onClick={go} disabled={loading} style={{width:"100%",justifyContent:"center",padding:14,fontSize:16,marginTop:4,borderRadius:12}}>{loading?"מתחבר...":"כניסה למערכת →"}</PrimaryBtn>
-        </div>
-        <div style={{marginTop:16,padding:"14px 18px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:14,fontSize:12,color:C.textDim,lineHeight:1.8}}>
-          <strong style={{color:C.textMuted}}>משתמשי הדגמה:</strong><br/>
-          🔍 מפקח: <code style={{color:"#38bdf8"}}>inspector1</code> / <code style={{color:"#38bdf8"}}>pass123</code><br/>
-          👑 מנהל: <code style={{color:"#fca5a5"}}>admin</code> / <code style={{color:"#fca5a5"}}>admin123</code><br/>
-          👑 מנהל: <code style={{color:"#fca5a5"}}>avihai</code> / <code style={{color:"#fca5a5"}}>avihai123</code>
         </div>
       </div>
     </div>
