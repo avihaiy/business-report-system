@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "setup-git-hooks": "git config core.hooksPath .githooks",
+    "git-auto-push": "git add -A && git commit -m \"auto-sync\" && git push origin HEAD"
   },
   "dependencies": {
     "react": "^18.3.1",
