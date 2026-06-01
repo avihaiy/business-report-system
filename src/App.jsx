@@ -16,6 +16,7 @@ const SEED_USERS=[
   {id:1,username:"inspector1",password:"pass123",name:"דוד לוי",role:"inspector",active:true,assignedBusinesses:[1,2,3],avatar:"ד",phone:"050-1234567",email:"david@city.gov.il",joinDate:"2023-01-15"},
   {id:2,username:"inspector2",password:"pass123",name:"רחל כהן",role:"inspector",active:true,assignedBusinesses:[2,4,5],avatar:"ר",phone:"052-7654321",email:"rachel@city.gov.il",joinDate:"2022-08-20"},
   {id:3,username:"admin",password:"admin123",name:"מנהל מערכת",role:"admin",active:true,assignedBusinesses:[],avatar:"מ",phone:"03-9876543",email:"admin@city.gov.il",joinDate:"2021-01-01"},
+  {id:4,username:"avihai",password:"avihai123",name:"אביחי סער",role:"admin",active:true,assignedBusinesses:[],avatar:"א",phone:"050-9876543",email:"avihai@city.gov.il",joinDate:"2024-06-01"},
 ];
 const BIZ_TYPES=["מסעדה","מרכול","מכבסה","בית מרקחת","ספרות","קפה","מאפייה","פארמה","קוסמטיקה","ספורט"];
 const SEED_BUSINESSES=[
@@ -296,7 +297,8 @@ function LoginPage({users,onLogin}){
         <div style={{marginTop:16,padding:"14px 18px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:14,fontSize:12,color:C.textDim,lineHeight:1.8}}>
           <strong style={{color:C.textMuted}}>משתמשי הדגמה:</strong><br/>
           🔍 מפקח: <code style={{color:"#38bdf8"}}>inspector1</code> / <code style={{color:"#38bdf8"}}>pass123</code><br/>
-          👑 מנהל: <code style={{color:"#fca5a5"}}>admin</code> / <code style={{color:"#fca5a5"}}>admin123</code>
+          👑 מנהל: <code style={{color:"#fca5a5"}}>admin</code> / <code style={{color:"#fca5a5"}}>admin123</code><br/>
+          👑 מנהל: <code style={{color:"#fca5a5"}}>avihai</code> / <code style={{color:"#fca5a5"}}>avihai123</code>
         </div>
       </div>
     </div>
@@ -730,7 +732,7 @@ function ReportsPage({reports,businesses,users,filterInspectorId}){
 // ════════════════════════════════════════════════════════════
 // BUSINESSES PAGE
 // ════════════════════════════════════════════════════════════
-function BusinessesPage({businesses,setBusinesses,reports,users}){
+function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setReports}){
   const[search,setSearch]=useState("");
   const[typeFilter,setTypeFilter]=useState("all");
   const[riskFilter,setRiskFilter]=useState("all");
@@ -740,6 +742,17 @@ function BusinessesPage({businesses,setBusinesses,reports,users}){
 
   const openNew=()=>{setForm({name:"",type:"מסעדה",address:"",license:"",phone:"",active:true,risk:"low"});setModal("new");};
   const openEdit=b=>{setForm({...b});setModal(b);};
+
+  const deleteBiz=biz=>{
+    if(!window.confirm(`למחוק את העסק "${biz.name}"? פעולה זו לא ניתנת לביטול.`))return;
+    setBusinesses(prev=>prev.filter(x=>x.id!==biz.id));
+    setUsers(prev=>prev.map(u=>({
+      ...u,
+      assignedBusinesses:u.assignedBusinesses?.filter(id=>id!==biz.id) || []
+    })));
+    setReports(prev=>prev.filter(r=>r.businessId!==biz.id));
+    if(modal&&modal.id===biz.id) setModal(null);
+  };
 
   const saveBiz=()=>{
     setSaving(true);
@@ -792,7 +805,10 @@ function BusinessesPage({businesses,setBusinesses,reports,users}){
                     {!biz.active&&<Tag color="#6b7280" bg="rgba(107,114,128,0.1)">מושבת</Tag>}
                   </div>
                 </div>
-                <button onClick={()=>openEdit(biz)} style={{background:"rgba(255,255,255,0.07)",border:"none",borderRadius:7,padding:"5px 10px",color:C.textMuted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>עריכה</button>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>openEdit(biz)} style={{background:"rgba(255,255,255,0.07)",border:"none",borderRadius:7,padding:"5px 10px",color:C.textMuted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>עריכה</button>
+                  <button onClick={()=>deleteBiz(biz)} style={{background:"rgba(239,68,68,0.08)",border:"none",borderRadius:7,padding:"5px 10px",color:"#fca5a5",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>🗑 מחק</button>
+                </div>
               </div>
               <div style={{color:C.textDim,fontSize:12,marginBottom:4}}>📍 {biz.address}</div>
               <div style={{color:C.textDim,fontSize:12,marginBottom:4}}>📞 {biz.phone}</div>
@@ -1421,7 +1437,7 @@ export default function App(){
         <div style={{padding: isMobile ? "0 16px 32px" : "0 28px 32px",flex:1}}>
           {page==="dashboard"&&<Dashboard user={user} reports={reports} businesses={businesses} users={users} setPage={setPage} />}
           {page==="reports"&&user.role==="admin"&&<ReportsPage reports={reports} businesses={businesses} users={users} />}
-          {page==="businesses"&&user.role==="admin"&&<BusinessesPage businesses={businesses} setBusinesses={setBusinesses} reports={reports} users={users} />}
+          {page==="businesses"&&user.role==="admin"&&<BusinessesPage businesses={businesses} setBusinesses={setBusinesses} reports={reports} users={users} setUsers={setUsers} setReports={setReports} />}
           {page==="users"&&user.role==="admin"&&<UsersPage users={users} setUsers={setUsers} businesses={businesses} reports={reports} />}
           {page==="alerts"&&<AlertsPage notifs={notifs} setNotifs={setNotifs} reports={reports} setReports={setReports} businesses={businesses} user={user} />}
           {page==="myBusinesses"&&user.role==="inspector"&&<MyBusinesses user={user} businesses={businesses} reports={reports} onSaveReport={handleAddReport} />}
