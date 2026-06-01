@@ -4,7 +4,9 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContai
 // ════════════════════════════════════════════════════════════
 // STORAGE
 // ════════════════════════════════════════════════════════════
-const API_BASE = '/api';
+// API base is configurable via Vite env `VITE_API_BASE` or a global
+// `window.__API_BASE__` (useful when hosting frontend and backend separately).
+const API_BASE = (typeof window !== 'undefined' && window.__API_BASE__) || import.meta.env.VITE_API_BASE || '/api';
 
 async function dbSet(k,d){
   try{
