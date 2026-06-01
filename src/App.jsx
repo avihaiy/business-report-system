@@ -1382,7 +1382,9 @@ export default function App(){
         /* Mobile adjustments */
         @media (max-width: 768px) {
           input, textarea, select { width: 100% !important; box-sizing: border-box; font-size: 16px; padding: 12px !important; }
-          button { min-width: 0 !important; width: 100% !important; box-sizing: border-box; padding: 12px 14px !important; font-size: 16px; }
+          /* Do not force every button to full width — allow layout-preserving buttons via .fullwidth when needed */
+          button { min-width: 0 !important; box-sizing: border-box; padding: 12px 14px !important; font-size: 16px; }
+          button.fullwidth { width: 100% !important; }
           .glass-card { padding: 14px !important; border-radius: 12px !important; }
           .sidebar-drawer { width: 100% !important; right: 0 !important; left: 0 !important; }
           .sidebar-drawer nav button { text-align: right !important; padding: 12px 14px !important; }
@@ -1390,10 +1392,9 @@ export default function App(){
           h1 { font-size: 18px !important; }
           .modal-inner { width: 100% !important; padding: 18px !important; border-radius: 12px !important; max-height: 94vh !important; }
 
-          /* Page-specific tweaks */
-          .page-dashboard .cardStyle, .page-dashboard .glass-card { margin-bottom: 10px; }
+          /* Page-specific tweaks (simplified, avoid brittle selectors) */
+          .page-dashboard .glass-card { margin-bottom: 10px; }
           .page-reports .glass-card, .page-businesses .glass-card, .page-users .glass-card, .page-alerts .glass-card { width: 100% !important; display: block !important; }
-          .page-businesses [style*="gridTemplateColumns"] { grid-template-columns: 1fr !important; }
           .page-users .avatar, .page-reports .avatar { margin-bottom: 8px; }
         }
       `}</style>
