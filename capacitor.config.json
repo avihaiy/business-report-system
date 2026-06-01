@@ -1,0 +1,6 @@
+{
+  "appId": "com.avihai.businessreportsystem",
+  "appName": "Business Report System",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}

@@ -10,7 +10,15 @@
     "build": "vite build",
     "preview": "vite preview",
     "setup-git-hooks": "git config core.hooksPath .githooks",
-    "git-auto-push": "git add -A && git commit -m \"auto-sync\" && git push origin HEAD"
+    "git-auto-push": "git add -A && git commit -m \"auto-sync\" && git push origin HEAD",
+    "cap:init": "npx cap init",
+    "cap:sync": "npx cap sync",
+    "cap:add:android": "npx cap add android",
+    "cap:add:ios": "npx cap add ios",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
+    "build:android": "npm run build && npx cap copy android && npx cap sync android",
+    "build:ios": "npm run build && npx cap copy ios && npx cap sync ios"
   },
   "dependencies": {
     "concurrently": "^9.0.0",
@@ -18,7 +26,13 @@
     "express": "^4.18.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "recharts": "^2.12.7"
+    "recharts": "^2.12.7",
+    "@capacitor/core": "^5.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^5.0.4",
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.3.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
