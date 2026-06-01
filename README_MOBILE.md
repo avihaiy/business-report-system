@@ -45,4 +45,12 @@ Notes
 - This repository includes `capacitor.config.json` with `webDir: dist` so Capacitor will use the production build artifacts.
 - If you want CI-built APKs/IPAs, we can add GitHub Actions; Android can be built on Linux runners, iOS requires macOS runners or external service.
 
+PWA / Native-like behavior
+- A `manifest.json` and mobile meta tags were added so the web app can be installed to home screen in browsers that support PWAs.
+- A simple bottom navigation bar is shown on mobile to provide an app-like navigation experience.
+
+Quick tips
+- To test PWA/install behavior locally, build and serve the `dist` folder over HTTPS or use `vite preview` and open in Chrome/Edge and check the "Install" option in the address bar.
+- For true native builds (with access to native APIs), continue with the Capacitor steps above.
+
 Want me to prepare a GitHub Actions workflow to automatically build Android APKs and attach them to releases? If yes, I will add the workflow and required secret instructions.

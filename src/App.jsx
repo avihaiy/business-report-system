@@ -305,10 +305,15 @@ function ModalHead({title,sub,onClose}){
 }
 
 function PrimaryBtn({onClick,disabled,children,style={},icon}){
-  return<button onClick={onClick} disabled={disabled} style={{padding:"11px 22px",background:disabled?"rgba(59,130,246,0.3)":"linear-gradient(135deg,#3b82f6,#4f46e5)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:600,cursor:disabled?"default":"pointer",display:"flex",alignItems:"center",gap:6,...style}}>{icon&&<span>{icon}</span>}{children}</button>;
+  const isMobile = useIsMobile();
+  const fullWidth = isMobile && style && style.fullwidth!==false;
+  const baseStyle = {padding:"11px 22px",background:disabled?"rgba(59,130,246,0.3)":"linear-gradient(135deg,#3b82f6,#4f46e5)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:600,cursor:disabled?"default":"pointer",display:"flex",alignItems:"center",gap:6};
+  return<button onClick={onClick} disabled={disabled} style={{...baseStyle, ...(fullWidth?{width:"100%"}:{}), ...style}}>{icon&&<span>{icon}</span>}{children}</button>;
 }
 function GhostBtn({onClick,children,style={},danger}){
-  return<button onClick={onClick} style={{padding:"11px 18px",background:danger?"rgba(239,68,68,0.07)":"rgba(255,255,255,0.05)",border:`1px solid ${danger?"rgba(239,68,68,0.22)":"rgba(255,255,255,0.1)"}`,borderRadius:10,color:danger?"#fca5a5":C.textMuted,cursor:"pointer",fontSize:14,fontFamily:"inherit",...style}}>{children}</button>;
+  const isMobile = useIsMobile();
+  const baseStyle = {padding:"11px 18px",background:danger?"rgba(239,68,68,0.07)":"rgba(255,255,255,0.05)",border:`1px solid ${danger?"rgba(239,68,68,0.22)":"rgba(255,255,255,0.1)"}`,borderRadius:10,color:danger?"#fca5a5":C.textMuted,cursor:"pointer",fontSize:14,fontFamily:"inherit"};
+  return<button onClick={onClick} style={{...baseStyle, ...(isMobile?{width:"100%"}:{}), ...style}}>{children}</button>;
 }
 
 function SectionTitle({children}){
@@ -1520,7 +1525,7 @@ export default function App(){
         </div>
 
         {/* Content Body */}
-        <div style={{padding: isMobile ? "0 16px 32px" : "0 28px 32px",flex:1}}>
+        <div style={{padding: isMobile ? "0 16px 100px" : "0 28px 32px",flex:1}}>
           {page==="dashboard"&&<Dashboard user={user} reports={reports} businesses={businesses} users={users} setPage={setPage} />}
           {page==="reports"&&user.role==="admin"&&<ReportsPage reports={reports} businesses={businesses} users={users} />}
           {page==="businesses"&&user.role==="admin"&&<BusinessesPage businesses={businesses} setBusinesses={setBusinesses} reports={reports} users={users} setUsers={setUsers} setReports={setReports} />}
@@ -1533,6 +1538,17 @@ export default function App(){
         <div style={{padding:12,textAlign:"center",borderTop:"1px solid rgba(255,255,255,0.04)",color:C.textDim,fontSize:12}}>
           © {new Date().getFullYear()} Avihai Yosipovich — כל הזכויות שמורות
         </div>
+        {/* Mobile Bottom Navigation */}
+        {isMobile && (
+          <div style={{position:"fixed",left:0,right:0,bottom:0,height:64,background:C.sidebar,display:"flex",justifyContent:"space-around",alignItems:"center",borderTop:"1px solid rgba(255,255,255,0.06)",zIndex:220}}>
+            {nav.map(n=> (
+              <button key={n.key} onClick={()=>setPage(n.key)} style={{background:"transparent",border:"none",color:page===n.key?C.blue:C.textMuted,display:"flex",flexDirection:"column",alignItems:"center",gap:4,fontSize:12,cursor:"pointer"}}>
+                <div style={{fontSize:18}}>{n.icon}</div>
+                <div style={{fontSize:11}}>{n.label}</div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
