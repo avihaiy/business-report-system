@@ -1281,10 +1281,29 @@ function MyBusinesses({user,businesses,reports,onSaveReport}){
 // ════════════════════════════════════════════════════════════
 export default function App(){
   const{users,setUsers,businesses,setBusinesses,reports,setReports,notifs,setNotifs,resetDatabase}=useDB();
-  const[user,setUser]=useState(null);
+  const[user,setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('loggedUser');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const[page,setPage]=useState("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    try {
+      if (user) {
+        localStorage.setItem('loggedUser', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('loggedUser');
+      }
+    } catch {
+      // ignore storage failures
+    }
+  }, [user]);
 
   const pendingInspections = useMemo(() => {
     return getPendingInspections(user, businesses, reports);
