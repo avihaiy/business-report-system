@@ -4,32 +4,24 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContai
 // ════════════════════════════════════════════════════════════
 // STORAGE
 // ════════════════════════════════════════════════════════════
-const SK = { USERS:"biz_users", BUSINESSES:"biz_biz", REPORTS:"biz_reports", NOTIFS:"biz_notifs" };
-function dbGet(k,seed){
+const API_BASE = '/api';
+
+async function dbSet(k,d){
   try{
-    const r=localStorage.getItem(k);
-    if(r){
-      const data=JSON.parse(r);
-      if(Array.isArray(data) && Array.isArray(seed)){
-        const merged = seed.reduce((acc,item)=>{
-          if(!acc.some(x=>x && ((x.id!=null && x.id===item.id) || (x.username && item.username && x.username===item.username)))){
-            acc.push(item);
-          }
-          return acc;
-        },[...data]);
-        if(merged.length!==data.length){
-          localStorage.setItem(k,JSON.stringify(merged));
-          return merged;
-        }
-      }
-      return data;
-    }
-    localStorage.setItem(k,JSON.stringify(seed));
-    return seed;
-  }catch{return seed;}
+    await fetch(`${API_BASE}/${k}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(d)
+    });
+  }catch{}
 }
-function dbSet(k,d){try{localStorage.setItem(k,JSON.stringify(d));}catch{}}
-function dbReset(){Object.values(SK).forEach(k=>localStorage.removeItem(k));}
+
+async function dbReset(){
+  try{
+    const res = await fetch(`${API_BASE}/reset`, { method: 'POST' });
+    return res.ok;
+  }catch{return false;}
+}
 
 // ════════════════════════════════════════════════════════════
 // SEED DATA
@@ -66,16 +58,75 @@ const CATEGORIES=["היגיינה","בטיחות","תיעוד","שירות"];
 // DB HOOK
 // ════════════════════════════════════════════════════════════
 function useDB(){
-  const[users,setU]=useState(()=>dbGet(SK.USERS,SEED_USERS));
-  const[businesses,setB]=useState(()=>dbGet(SK.BUSINESSES,SEED_BUSINESSES));
-  const[reports,setR]=useState(()=>dbGet(SK.REPORTS,SEED_REPORTS));
-  const[notifs,setN]=useState(()=>dbGet(SK.NOTIFS,SEED_NOTIFS));
-  const mk=(setter,key)=>useCallback(fn=>{setter(prev=>{const next=typeof fn==="function"?fn(prev):fn;dbSet(key,next);return next;});},[]);
-  const setUsers=mk(setU,SK.USERS);
-  const setBusinesses=mk(setB,SK.BUSINESSES);
-  const setReports=mk(setR,SK.REPORTS);
-  const setNotifs=mk(setN,SK.NOTIFS);
-  return{users,setUsers,businesses,setBusinesses,reports,setReports,notifs,setNotifs};
+  const[users,setU]=useState(SEED_USERS);
+  const[businesses,setB]=useState(SEED_BUSINESSES);
+  const[reports,setR]=useState(SEED_REPORTS);
+  const[notifs,setN]=useState(SEED_NOTIFS);
+
+  useEffect(()=>{
+    let active=true;
+    const loadData=async()=>{
+      try{
+        const [u,b,r,n]=await Promise.all([
+          fetch(`${API_BASE}/users`),
+          fetch(`${API_BASE}/businesses`),
+          fetch(`${API_BASE}/reports`),
+          fetch(`${API_BASE}/notifs`)
+        ]);
+
+        if(!active) return;
+
+        const [usersData,businessesData,reportsData,notifsData]=await Promise.all([
+          u.ok?u.json():Promise.reject(),
+          b.ok?b.json():Promise.reject(),
+          r.ok?r.json():Promise.reject(),
+          n.ok?n.json():Promise.reject()
+        ]);
+
+        setU(Array.isArray(usersData)?usersData:SEED_USERS);
+        setB(Array.isArray(businessesData)?businessesData:SEED_BUSINESSES);
+        setR(Array.isArray(reportsData)?reportsData:SEED_REPORTS);
+        setN(Array.isArray(notifsData)?notifsData:SEED_NOTIFS);
+      }catch(e){
+        console.warn('Failed to load server data', e);
+      }
+    };
+    loadData();
+    return ()=>{active=false;};
+  },[]);
+
+  const mk=(setter,key)=>useCallback(fn=>{
+    setter(prev=>{
+      const next=typeof fn==='function'?fn(prev):fn;
+      dbSet(key,next);
+      return next;
+    });
+  },[]);
+
+  const setUsers=mk(setU,'users');
+  const setBusinesses=mk(setB,'businesses');
+  const setReports=mk(setR,'reports');
+  const setNotifs=mk(setN,'notifs');
+
+  const resetDatabase=useCallback(async()=>{
+    const success=await dbReset();
+    if(success){
+      const [u,b,r,n]=await Promise.all([
+        fetch(`${API_BASE}/users`),
+        fetch(`${API_BASE}/businesses`),
+        fetch(`${API_BASE}/reports`),
+        fetch(`${API_BASE}/notifs`)
+      ]);
+      if(u.ok&&b.ok&&r.ok&&n.ok){
+        setU(await u.json());
+        setB(await b.json());
+        setR(await r.json());
+        setN(await n.json());
+      }
+    }
+  },[]);
+
+  return{users,setUsers,businesses,setBusinesses,reports,setReports,notifs,setNotifs,resetDatabase};
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1220,7 +1271,7 @@ function MyBusinesses({user,businesses,reports,onSaveReport}){
 // APP ROOT
 // ════════════════════════════════════════════════════════════
 export default function App(){
-  const{users,setUsers,businesses,setBusinesses,reports,setReports,notifs,setNotifs}=useDB();
+  const{users,setUsers,businesses,setBusinesses,reports,setReports,notifs,setNotifs,resetDatabase}=useDB();
   const[user,setUser]=useState(null);
   const[page,setPage]=useState("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -1326,6 +1377,17 @@ export default function App(){
         }
         .pulse-urgent {
           animation: pulse-glow 2s infinite;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+          input, textarea, select { width: 100% !important; box-sizing: border-box; }
+          button { min-width: 0 !important; width: 100% !important; box-sizing: border-box; }
+          .glass-card { padding: 14px !important; }
+          .sidebar-drawer { width: 100% !important; right: 0 !important; left: 0 !important; }
+          .sidebar-drawer nav button { text-align: right !important; }
+          .pulse-urgent { font-size: 14px; }
+          h1 { font-size: 18px !important; }
         }
       `}</style>
 
@@ -1445,7 +1507,7 @@ export default function App(){
           </div>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             {unreadNotifs > 0 && <div style={{background:"rgba(244, 63, 94, 0.12)",border:"1px solid rgba(244, 63, 94, 0.2)",borderRadius:10,padding:"6px 12px",color:"#fca5a5",fontSize:12,fontWeight: 600,cursor:"pointer"}} onClick={()=>setPage("alerts")}>🔔 {unreadNotifs} התראות חדשות</div>}
-            <button onClick={()=>{if(window.confirm("לאפס את מסד הנתונים?")){{dbReset();window.location.reload();}}}} style={{background:"transparent",border:"none",color:C.textDim,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>⚙ איפוס</button>
+            <button onClick={()=>{if(window.confirm("לאפס את מסד הנתונים?")){resetDatabase();}}} style={{background:"transparent",border:"none",color:C.textDim,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>⚙ איפוס</button>
           </div>
         </div>
 

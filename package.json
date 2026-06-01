@@ -4,13 +4,18 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "client": "vite",
+    "server": "node server.cjs",
+    "dev": "concurrently \"npm run client\" \"npm run server\"",
     "build": "vite build",
     "preview": "vite preview",
     "setup-git-hooks": "git config core.hooksPath .githooks",
     "git-auto-push": "git add -A && git commit -m \"auto-sync\" && git push origin HEAD"
   },
   "dependencies": {
+    "concurrently": "^9.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "recharts": "^2.12.7"

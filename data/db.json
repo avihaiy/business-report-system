@@ -1,0 +1,203 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "inspector1",
+      "password": "pass123",
+      "name": "דוד לוי",
+      "role": "inspector",
+      "active": true,
+      "assignedBusinesses": [1, 2, 3],
+      "avatar": "ד",
+      "phone": "050-1234567",
+      "email": "david@city.gov.il",
+      "joinDate": "2023-01-15"
+    },
+    {
+      "id": 2,
+      "username": "inspector2",
+      "password": "pass123",
+      "name": "רחל כהן",
+      "role": "inspector",
+      "active": true,
+      "assignedBusinesses": [2, 4, 5],
+      "avatar": "ר",
+      "phone": "052-7654321",
+      "email": "rachel@city.gov.il",
+      "joinDate": "2022-08-20"
+    },
+    {
+      "id": 3,
+      "username": "admin",
+      "password": "admin123",
+      "name": "מנהל מערכת",
+      "role": "admin",
+      "active": true,
+      "assignedBusinesses": [],
+      "avatar": "מ",
+      "phone": "03-9876543",
+      "email": "admin@city.gov.il",
+      "joinDate": "2021-01-01"
+    },
+    {
+      "id": 4,
+      "username": "avihai",
+      "password": "avihai123",
+      "name": "אביחי סער",
+      "role": "admin",
+      "active": true,
+      "assignedBusinesses": [],
+      "avatar": "א",
+      "phone": "050-9876543",
+      "email": "avihai@city.gov.il",
+      "joinDate": "2024-06-01"
+    }
+  ],
+  "businesses": [
+    {
+      "id": 1,
+      "name": "מסעדת הים הכחול",
+      "type": "מסעדה",
+      "address": "רחוב הרצל 12, תל אביב",
+      "license": "TLV-2024-001",
+      "phone": "03-5551234",
+      "active": true,
+      "risk": "low"
+    },
+    {
+      "id": 2,
+      "name": "סופרמרקט מגה",
+      "type": "מרכול",
+      "address": "שדרות רוטשילד 45, תל אביב",
+      "license": "TLV-2024-002",
+      "phone": "03-5559876",
+      "active": true,
+      "risk": "medium"
+    },
+    {
+      "id": 3,
+      "name": "מכבסה נקי",
+      "type": "מכבסה",
+      "address": "רחוב דיזנגוף 78, תל אביב",
+      "license": "TLV-2024-003",
+      "phone": "03-5554567",
+      "active": true,
+      "risk": "low"
+    },
+    {
+      "id": 4,
+      "name": "ברביקיו אורן",
+      "type": "מסעדה",
+      "address": "רחוב אלנבי 22, תל אביב",
+      "license": "TLV-2024-004",
+      "phone": "03-5558888",
+      "active": true,
+      "risk": "high"
+    },
+    {
+      "id": 5,
+      "name": "בית מרקחת כרמל",
+      "type": "בית מרקחת",
+      "address": "רחוב הכרמל 9, חיפה",
+      "license": "HFA-2024-005",
+      "phone": "04-5553333",
+      "active": true,
+      "risk": "low"
+    }
+  ],
+  "reports": [
+    {
+      "id": 1,
+      "businessId": 2,
+      "inspectorId": 1,
+      "date": "2025-04-10",
+      "score": 72,
+      "status": "הושלם",
+      "urgency": "medium",
+      "violations": ["תאריך תפוגה על מוצרים", "חוסר ניקיון בפינת קופה"],
+      "observations": "המחסן מסודר. שלטי מחירים תקינים. פינות ניקיון דרושות שיפור. עובדי הקופה ענו בנימוס.",
+      "notes": "נדרש מעקב תוך 30 יום",
+      "categories": {"היגיינה": 3, "בטיחות": 4, "תיעוד": 2, "שירות": 4},
+      "followUp": "2025-05-10"
+    },
+    {
+      "id": 2,
+      "businessId": 1,
+      "inspectorId": 1,
+      "date": "2025-04-20",
+      "score": 91,
+      "status": "הושלם",
+      "urgency": "low",
+      "violations": [],
+      "observations": "מטבח נקי ומסודר. כל העובדים עם כיסוי ראש. טמפרטורת המקררים תקינה. תפריט עדכני עם הצהרות אלרגנים.",
+      "notes": "ביקורת תקינה לחלוטין",
+      "categories": {"היגיינה": 5, "בטיחות": 5, "תיעוד": 4, "שירות": 5},
+      "followUp": null
+    },
+    {
+      "id": 3,
+      "businessId": 4,
+      "inspectorId": 2,
+      "date": "2025-05-01",
+      "score": 54,
+      "status": "הושלם",
+      "urgency": "high",
+      "violations": ["אוכל לא מכוסה", "חיות בחצר", "ציוד ישן"],
+      "observations": "מצב המקום קריטי. יש לנקוט בפעולה מיידית.",
+      "notes": "נדרש סגירה זמנית",
+      "categories": {"היגיינה": 2, "בטיחות": 2, "תיעוד": 3, "שירות": 3},
+      "followUp": "2025-05-15"
+    },
+    {
+      "id": 4,
+      "businessId": 3,
+      "inspectorId": 1,
+      "date": "2025-05-12",
+      "score": 85,
+      "status": "הושלם",
+      "urgency": "low",
+      "violations": ["שלט רישיון חסר"],
+      "observations": "מתקן נקי. ציוד עובד תקין. צוות מקצועי.",
+      "notes": "יש לתלות שלט רישיון",
+      "categories": {"היגיינה": 4, "בטיחות": 5, "תיעוד": 3, "שירות": 5},
+      "followUp": null
+    },
+    {
+      "id": 5,
+      "businessId": 5,
+      "inspectorId": 2,
+      "date": "2025-05-18",
+      "score": 94,
+      "status": "הושלם",
+      "urgency": "low",
+      "violations": [],
+      "observations": "תרופות מאורגנות לפי תקן. הכל בסדר מושלם.",
+      "notes": "מצוין",
+      "categories": {"היגיינה": 5, "בטיחות": 5, "תיעוד": 5, "שירות": 4},
+      "followUp": null
+    }
+  ],
+  "notifs": [
+    {
+      "id": 1,
+      "type": "warning",
+      "text": "ביקורת דחופה נדרשת: ברביקיו אורן",
+      "date": "2025-05-20",
+      "read": false
+    },
+    {
+      "id": 2,
+      "type": "info",
+      "text": "מפקח דוד לוי סיים 3 ביקורות החודש",
+      "date": "2025-05-19",
+      "read": false
+    },
+    {
+      "id": 3,
+      "type": "success",
+      "text": "בית מרקחת כרמל קיבל ציון מושלם 94",
+      "date": "2025-05-18",
+      "read": true
+    }
+  ]
+}
