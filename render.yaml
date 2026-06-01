@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: business-report-api
+    env: docker
+    plan: starter
+    dockerfilePath: Dockerfile
+    branch: main
+    healthCheckPath: /api/users
+    buildCommand: "npm ci && npm run build"
+    runCommand: "node server.cjs"
+    envVars:
+      - key: NODE_ENV
+        value: production
+# Note: set DATABASE_URL in Render dashboard (managed Postgres) or provide your own.

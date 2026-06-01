@@ -49,6 +49,33 @@ function saveDB(db) {
 
 const seed = loadSeed();
 
+// Simple Postgres-backed key/value JSON storage if DATABASE_URL provided
+let pgPool = null;
+const usePostgres = !!process.env.DATABASE_URL;
+if (usePostgres) {
+  const { Pool } = require('pg');
+  pgPool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false });
+  // ensure kv table exists
+  (async () => {
+    try {
+      await pgPool.query(`CREATE TABLE IF NOT EXISTS kv (key text PRIMARY KEY, value jsonb)`);
+      // If kv is empty, initialize with seed data
+      const r = await pgPool.query("SELECT count(*)::int AS c FROM kv");
+      if (r.rows[0].c === 0) {
+        const initial = loadDB();
+        await pgPool.query('BEGIN');
+        for (const k of Object.keys(initial)) {
+          await pgPool.query('INSERT INTO kv(key,value) VALUES($1,$2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', [k, initial[k]]);
+        }
+        await pgPool.query('COMMIT');
+      }
+      console.log('Postgres KV storage ready');
+    } catch (e) {
+      console.error('Failed to initialize Postgres KV store', e);
+    }
+  })();
+}
+
 app.use(cors());
 app.use(express.json());
 // Serve built client if available
@@ -61,28 +88,67 @@ if (fs.existsSync(DIST_DIR)) {
   });
 }
 
-app.get('/api/:collection', (req, res) => {
+async function loadDBAsync() {
+  if (usePostgres) {
+    try {
+      const res = await pgPool.query('SELECT key,value FROM kv');
+      const out = {};
+      for (const row of res.rows) out[row.key] = row.value;
+      // ensure keys exist
+      return {
+        users: out.users || seed.users,
+        businesses: out.businesses || seed.businesses,
+        reports: out.reports || seed.reports,
+        notifs: out.notifs || seed.notifs
+      };
+    } catch (e) {
+      console.error('Postgres load failed', e);
+      return { users: seed.users, businesses: seed.businesses, reports: seed.reports, notifs: seed.notifs };
+    }
+  }
+  return loadDB();
+}
+
+async function saveDBAsync(db) {
+  if (usePostgres) {
+    try {
+      await pgPool.query('BEGIN');
+      for (const k of Object.keys(db)) {
+        await pgPool.query('INSERT INTO kv(key,value) VALUES($1,$2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value', [k, db[k]]);
+      }
+      await pgPool.query('COMMIT');
+      return db;
+    } catch (e) {
+      await pgPool.query('ROLLBACK').catch(()=>{});
+      console.error('Postgres save failed', e);
+      throw e;
+    }
+  }
+  return saveDB(db);
+}
+
+app.get('/api/:collection', async (req, res) => {
   const collection = req.params.collection;
-  const db = loadDB();
+  const db = await loadDBAsync();
   if (!Object.prototype.hasOwnProperty.call(db, collection)) {
     return res.status(404).json({ error: 'Collection not found' });
   }
   res.json(db[collection]);
 });
 
-app.put('/api/:collection', (req, res) => {
+app.put('/api/:collection', async (req, res) => {
   const collection = req.params.collection;
-  const db = loadDB();
+  const db = await loadDBAsync();
   if (!Object.prototype.hasOwnProperty.call(db, collection) || !Array.isArray(req.body)) {
     return res.status(400).json({ error: 'Invalid collection or payload' });
   }
   db[collection] = req.body;
-  saveDB(db);
+  await saveDBAsync(db);
   res.json(db[collection]);
 });
 
-app.post('/api/reset', (req, res) => {
-  saveDB(seed);
+app.post('/api/reset', async (req, res) => {
+  await saveDBAsync(seed);
   res.json(seed);
 });
 
