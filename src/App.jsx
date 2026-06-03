@@ -881,12 +881,13 @@ function ReportsPage({reports,businesses,users,filterInspectorId}){
 // ════════════════════════════════════════════════════════════
 // BUSINESSES PAGE
 // ════════════════════════════════════════════════════════════
-function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setReports}){
+function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setReports,user,onSaveReport}){
   const isMobile = useIsMobile();
   const[search,setSearch]=useState("");
   const[typeFilter,setTypeFilter]=useState("all");
   const[riskFilter,setRiskFilter]=useState("all");
   const[modal,setModal]=useState(null);
+  const[reportingBiz,setReportingBiz]=useState(null);
   const[form,setForm]=useState({name:"",type:"מסעדה",address:"",license:"",phone:"",active:true,risk:"low"});
   const[saving,setSaving]=useState(false);
 
@@ -955,7 +956,8 @@ function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setRepo
                     {!biz.active&&<Tag color="#6b7280" bg="rgba(107,114,128,0.1)">מושבת</Tag>}
                   </div>
                 </div>
-                <div style={{display:"flex",gap:8,width:isMobile?"100%":"auto",justifyContent:isMobile?"flex-end":"flex-start"}}>
+                <div style={{display:"flex",gap:8,width:isMobile?"100%":"auto",justifyContent:isMobile?"flex-end":"flex-start", flexWrap:"wrap"}}>
+                  <button onClick={()=>setReportingBiz(biz)} style={{background:"rgba(56,189,248,0.12)",border:"1px solid rgba(56,189,248,0.25)",borderRadius:7,padding:"5px 10px",color:"#38bdf8",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>📋 דווח</button>
                   <button onClick={()=>openEdit(biz)} style={{background:"rgba(255,255,255,0.07)",border:"none",borderRadius:7,padding:"5px 10px",color:C.textMuted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>עריכה</button>
                   <button onClick={()=>deleteBiz(biz)} style={{background:"rgba(239,68,68,0.08)",border:"none",borderRadius:7,padding:"5px 10px",color:"#fca5a5",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>🗑 מחק</button>
                 </div>
@@ -1007,6 +1009,10 @@ function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setRepo
             <GhostBtn onClick={()=>setModal(null)}>ביטול</GhostBtn>
           </div>
         </Modal>
+      )}
+
+      {reportingBiz&&(
+        <NewReportModal business={reportingBiz} user={user} onSave={(d)=>{onSaveReport(d);setReportingBiz(null);}} onClose={()=>setReportingBiz(null)} />
       )}
     </div>
   );
@@ -1632,7 +1638,7 @@ export default function App(){
         <div style={{padding: isMobile ? "0 16px 100px" : "0 28px 32px",flex:1}}>
           {page==="dashboard"&&<Dashboard user={user} reports={reports} businesses={businesses} users={users} setPage={setPage} />}
           {page==="reports"&&user.role==="admin"&&<ReportsPage reports={reports} businesses={businesses} users={users} />}
-          {page==="businesses"&&user.role==="admin"&&<BusinessesPage businesses={businesses} setBusinesses={setBusinesses} reports={reports} users={users} setUsers={setUsers} setReports={setReports} />}
+          {page==="businesses"&&user.role==="admin"&&<BusinessesPage businesses={businesses} setBusinesses={setBusinesses} reports={reports} users={users} setUsers={setUsers} setReports={setReports} user={user} onSaveReport={handleAddReport} />}
           {page==="users"&&user.role==="admin"&&<UsersPage users={users} setUsers={setUsers} businesses={businesses} reports={reports} user={user} setUser={setUser} />}
           {page==="alerts"&&<AlertsPage notifs={notifs} setNotifs={setNotifs} reports={reports} setReports={setReports} businesses={businesses} user={user} />}
           {page==="myBusinesses"&&user.role==="inspector"&&<MyBusinesses user={user} businesses={businesses} reports={reports} onSaveReport={handleAddReport} />}
