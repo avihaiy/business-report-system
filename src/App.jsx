@@ -776,6 +776,7 @@ function Dashboard({user,reports,businesses,users,setPage}){
 // REPORTS PAGE
 // ════════════════════════════════════════════════════════════
 function ReportsPage({reports,businesses,users,filterInspectorId}){
+  const isMobile = useIsMobile();
   const[search,setSearch]=useState("");
   const[scoreFilter,setScoreFilter]=useState("all");
   const[urgFilter,setUrgFilter]=useState("all");
@@ -793,12 +794,12 @@ function ReportsPage({reports,businesses,users,filterInspectorId}){
 
   return(
     <div className="page-reports">
-      <div style={{display:"flex",gap:10,marginBottom:20,flexWrap:"wrap"}}>
+      <div style={{display:"flex",gap:10,marginBottom:20,flexDirection: isMobile ? "column" : "row", flexWrap:"wrap"}}>
         <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 חיפוש חופשי..." style={{...inp,flex:1,minWidth:200}} />
         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
           {[["all","הכל"],["high","גבוה 85+"],["mid","בינוני"],["low","נמוך"]].map(([k,l])=><Pill key={k} active={scoreFilter===k} onClick={()=>setScoreFilter(k)}>{l}</Pill>)}
         </div>
-        <div style={{display:"flex",gap:6}}>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
           {[["all","כל דחיפות"],["high","🔴 דחוף"],["medium","🟡 בינוני"],["low","🟢 רגיל"]].map(([k,l])=><Pill key={k} active={urgFilter===k} onClick={()=>setUrgFilter(k)}>{l}</Pill>)}
         </div>
       </div>
@@ -811,13 +812,13 @@ function ReportsPage({reports,businesses,users,filterInspectorId}){
             const urgMap={high:[C.red,"🔴"],medium:[C.amber,"🟡"],low:[C.green,"🟢"]};
             const[urgCol,urgIc]=urgMap[r.urgency||"low"];
             return(
-              <div key={r.id} style={{...cardStyle,display:"flex",gap:14,alignItems:"flex-start",cursor:"pointer",transition:"border-color .15s"}}
+              <div key={r.id} style={{...cardStyle,display:"flex",gap:14,alignItems:isMobile ? "stretch" : "flex-start", flexDirection: isMobile ? "column" : "row", cursor:"pointer",transition:"border-color .15s"}}
                    onClick={()=>setViewing(r)}
                    onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(59,130,246,0.4)"}
                    onMouseLeave={e=>e.currentTarget.style.borderColor=C.cardBorder}>
-                <div style={{width:4,borderRadius:4,alignSelf:"stretch",flexShrink:0,background:urgCol}} />
+                <div style={{width:isMobile ? "100%" : 4, height: isMobile ? 4 : "auto", borderRadius:4, alignSelf:"stretch", flexShrink:0, background:urgCol}} />
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6, flexDirection: isMobile ? "column" : "row", gap: isMobile ? 8 : 0}}>
                     <div>
                       <span style={{color:C.text,fontWeight:600,fontSize:15}}>{biz?.name}</span>
                       <span style={{color:C.textDim,fontSize:11,marginRight:8}}>· {biz?.type}</span>
@@ -846,6 +847,7 @@ function ReportsPage({reports,businesses,users,filterInspectorId}){
 // BUSINESSES PAGE
 // ════════════════════════════════════════════════════════════
 function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setReports}){
+  const isMobile = useIsMobile();
   const[search,setSearch]=useState("");
   const[typeFilter,setTypeFilter]=useState("all");
   const[riskFilter,setRiskFilter]=useState("all");
@@ -886,30 +888,30 @@ function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setRepo
 
   return(
     <div className="page-businesses">
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,gap:12,flexWrap:"wrap"}}>
-        <div style={{display:"flex",gap:8,flex:1,flexWrap:"wrap"}}>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 חפש עסק..." style={{...inp,flex:"0 1 240px"}} />
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:isMobile?"stretch":"center",marginBottom:18,gap:12,flexDirection: isMobile?"column":"row"}}>
+        <div style={{display:"flex",gap:8,flex:1,flexDirection: isMobile?"column":"row",flexWrap:"wrap"}}>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 חפש עסק..." style={{...inp,flex:isMobile?"none":"0 1 240px", width:"100%"}} />
           <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
             <Pill active={typeFilter==="all"} onClick={()=>setTypeFilter("all")}>הכל</Pill>
             {types.map(t=><Pill key={t} active={typeFilter===t} onClick={()=>setTypeFilter(t)}>{t}</Pill>)}
           </div>
-          <div style={{display:"flex",gap:5}}>
+          <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
             {[["all","כל סיכון"],["high","🔴 גבוה"],["medium","🟡 בינוני"],["low","🟢 תקין"]].map(([k,l])=><Pill key={k} active={riskFilter===k} onClick={()=>setRiskFilter(k)}>{l}</Pill>)}
           </div>
         </div>
-        <PrimaryBtn onClick={openNew} icon="🏢">עסק חדש</PrimaryBtn>
+        <PrimaryBtn onClick={openNew} icon="🏢" style={{width: isMobile?"100%":"auto", justifyContent:"center"}}>עסק חדש</PrimaryBtn>
       </div>
 
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:14}}>
+      <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"repeat(auto-fill,minmax(300px,1fr))",gap:14}}>
         {filtered.map(biz=>{
           const bizReports=reports.filter(r=>r.businessId===biz.id);
           const last=[...bizReports].sort((a,b)=>b.id-a.id)[0];
           const avg=bizReports.length?Math.round(bizReports.reduce((a,b)=>a+b.score,0)/bizReports.length):null;
           return(
             <div key={biz.id} style={{...cardStyle,opacity:biz.active?1:.6,transition:"transform .15s,border-color .15s",cursor:"default"}}
-                 onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.borderColor="rgba(59,130,246,0.3)";}}
+                 onMouseEnter={e=>{e.currentTarget.style.transform=isMobile?"none":"translateY(-2px)";e.currentTarget.style.borderColor="rgba(59,130,246,0.3)";}}
                  onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.borderColor=C.cardBorder;}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10,flexDirection:isMobile?"column":"row",gap:isMobile?10:0}}>
                 <div>
                   <div style={{color:C.text,fontWeight:700,fontSize:15,marginBottom:4}}>{biz.name}</div>
                   <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -918,7 +920,7 @@ function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setRepo
                     {!biz.active&&<Tag color="#6b7280" bg="rgba(107,114,128,0.1)">מושבת</Tag>}
                   </div>
                 </div>
-                <div style={{display:"flex",gap:8}}>
+                <div style={{display:"flex",gap:8,width:isMobile?"100%":"auto",justifyContent:isMobile?"flex-end":"flex-start"}}>
                   <button onClick={()=>openEdit(biz)} style={{background:"rgba(255,255,255,0.07)",border:"none",borderRadius:7,padding:"5px 10px",color:C.textMuted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>עריכה</button>
                   <button onClick={()=>deleteBiz(biz)} style={{background:"rgba(239,68,68,0.08)",border:"none",borderRadius:7,padding:"5px 10px",color:"#fca5a5",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>🗑 מחק</button>
                 </div>
@@ -979,6 +981,7 @@ function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setRepo
 // USERS PAGE
 // ════════════════════════════════════════════════════════════
 function UsersPage({users,setUsers,businesses,reports,user,setUser}){
+  const isMobile = useIsMobile();
   const[modal,setModal]=useState(null);
   const[permModal,setPermModal]=useState(null);
   const[form,setForm]=useState({username:"",password:"",name:"",role:"inspector",email:"",phone:"",active:true});
@@ -1009,17 +1012,17 @@ function UsersPage({users,setUsers,businesses,reports,user,setUser}){
 
   return(
     <div className="page-users">
-      <div style={{display:"flex",justifyContent:"space-between",marginBottom:20}}>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:20,flexDirection:isMobile?"column":"row",alignItems:isMobile?"flex-start":"center",gap:10}}>
         <p style={{color:C.textDim,fontSize:13,margin:0}}>{users.length} משתמשים · {users.filter(u=>u.role==="inspector").length} מפקחים</p>
-        <PrimaryBtn onClick={openNew} icon="👤">משתמש חדש</PrimaryBtn>
+        <PrimaryBtn onClick={openNew} icon="👤" style={{width:isMobile?"100%":"auto",justifyContent:"center"}}>משתמש חדש</PrimaryBtn>
       </div>
       <div style={{display:"grid",gap:10}}>
         {users.map(u=>{
           const userReports=reports.filter(r=>r.inspectorId===u.id);
           return(
-            <div key={u.id} style={{...cardStyle,display:"flex",gap:14,alignItems:"center",opacity:u.active?1:.55}}>
+            <div key={u.id} style={{...cardStyle,display:"flex",gap:14,alignItems:isMobile?"flex-start":"center",opacity:u.active?1:.55,flexDirection:isMobile?"column":"row"}}>
               <Avatar name={u.name} size={44} role={u.role} />
-              <div style={{flex:1,minWidth:0}}>
+              <div style={{flex:1,minWidth:0,width:"100%"}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3,flexWrap:"wrap"}}>
                   <span style={{color:C.text,fontWeight:700}}>{u.name}</span>
                   <Tag color={u.role==="admin"?"#fca5a5":"#a5b4fc"} bg={u.role==="admin"?"rgba(239,68,68,0.1)":"rgba(99,102,241,0.1)"}>{u.role==="admin"?"👑 מנהל":"🔍 מפקח"}</Tag>
@@ -1032,7 +1035,7 @@ function UsersPage({users,setUsers,businesses,reports,user,setUser}){
                   {u.joinDate&&<span style={{color:C.textDim,fontSize:12}}>📅 הצטרף {u.joinDate}</span>}
                 </div>
               </div>
-              <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"flex-end"}}>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:isMobile?"flex-start":"flex-end",width:isMobile?"100%":"auto"}}>
                 {u.role==="inspector"&&<button onClick={()=>setPermModal(u)} style={{background:"rgba(16,185,129,0.1)",border:"1px solid rgba(16,185,129,0.2)",borderRadius:8,padding:"7px 12px",color:"#34d399",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>🔐 הרשאות</button>}
                 <button onClick={()=>openEdit(u)} style={{background:"rgba(99,102,241,0.1)",border:"1px solid rgba(99,102,241,0.2)",borderRadius:8,padding:"7px 12px",color:"#a5b4fc",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✏️ עריכה</button>
                 {u.role!=="admin"&&<button onClick={()=>toggle(u)} style={{background:u.active?"rgba(245,158,11,0.08)":"rgba(34,197,94,0.08)",border:`1px solid ${u.active?"rgba(245,158,11,0.2)":"rgba(34,197,94,0.2)"}`,borderRadius:8,padding:"7px 12px",color:u.active?C.amber:C.green,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>{u.active?"השהה":"הפעל"}</button>}
