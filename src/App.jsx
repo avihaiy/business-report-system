@@ -38,7 +38,8 @@ async function dbReset() {
         { key: 'users', value: SEED_USERS },
         { key: 'businesses', value: SEED_BUSINESSES },
         { key: 'reports', value: SEED_REPORTS },
-        { key: 'notifs', value: SEED_NOTIFS }
+        { key: 'notifs', value: SEED_NOTIFS },
+        { key: 'tasks', value: SEED_TASKS }
       ]);
       return true;
     }
@@ -71,10 +72,11 @@ const SEED_REPORTS=[
   {id:5,businessId:5,inspectorId:2,date:"2025-05-18",score:94,status:"הושלם",urgency:"low",violations:[],observations:"תרופות מאורגנות לפי תקן. הכל בסדר מושלם.",notes:"מצוין",categories:{היגיינה:5,בטיחות:5,תיעוד:5,שירות:4},followUp:null},
 ];
 const SEED_NOTIFS=[
-  {id:1,type:"warning",text:"ביקורת דחופה נדרשת: ברביקיו אורן",date:"2025-05-20",read:false},
-  {id:2,type:"info",text:"מפקח דוד לוי סיים 3 ביקורות החודש",date:"2025-05-19",read:false},
-  {id:3,type:"success",text:"בית מרקחת כרמל קיבל ציון מושלם 94",date:"2025-05-18",read:true},
+  {id:1,type:"warning",text:"ביקורת דחופה נדרשת: ברביקיו אורן",date:"2025-05-20",read:false,audience:"admin"},
+  {id:2,type:"info",text:"מפקח דוד לוי סיים 3 ביקורות החודש",date:"2025-05-19",read:false,audience:"admin"},
+  {id:3,type:"success",text:"בית מרקחת כרמל קיבל ציון מושלם 94",date:"2025-05-18",read:true,audience:"admin"},
 ];
+const SEED_TASKS=[];
 const CATEGORIES=["היגיינה","בטיחות","תיעוד","שירות"];
 
 // ════════════════════════════════════════════════════════════
@@ -86,6 +88,7 @@ function useDB(){
   const[businesses,setB]=useState(()=> readLocal('businesses') || SEED_BUSINESSES);
   const[reports,setR]=useState(()=> readLocal('reports') || SEED_REPORTS);
   const[notifs,setN]=useState(()=> readLocal('notifs') || SEED_NOTIFS);
+  const[tasks,setT]=useState(()=> readLocal('tasks') || SEED_TASKS);
 
   // ── Sync from Supabase and listen for realtime changes ──
   useEffect(()=>{
@@ -114,6 +117,7 @@ function useDB(){
         if(kv['businesses'] && Array.isArray(kv['businesses'])) { setB(kv['businesses']); writeLocal('businesses', kv['businesses']); }
         if(kv['reports'] && Array.isArray(kv['reports'])) { setR(kv['reports']); writeLocal('reports', kv['reports']); }
         if(kv['notifs'] && Array.isArray(kv['notifs'])) { setN(kv['notifs']); writeLocal('notifs', kv['notifs']); }
+        if(kv['tasks'] && Array.isArray(kv['tasks'])) { setT(kv['tasks']); writeLocal('tasks', kv['tasks']); }
 
         // Subscribe to real-time changes
         channel = supabase.channel('kv_sync')
@@ -124,6 +128,7 @@ function useDB(){
                 if(payload.new.key === 'businesses') { setB(val); writeLocal('businesses', val); }
                 if(payload.new.key === 'reports') { setR(val); writeLocal('reports', val); }
                 if(payload.new.key === 'notifs') { setN(val); writeLocal('notifs', val); }
+                if(payload.new.key === 'tasks') { setT(val); writeLocal('tasks', val); }
               }
           })
           .subscribe();
@@ -153,6 +158,7 @@ function useDB(){
   const setBusinesses=mk(setB,'businesses');
   const setReports=mk(setR,'reports');
   const setNotifs=mk(setN,'notifs');
+  const setTasks=mk(setT,'tasks');
 
   // ── Reset to seed data ──
   const resetDatabase=useCallback(async()=>{
@@ -161,9 +167,10 @@ function useDB(){
     setB(SEED_BUSINESSES); writeLocal('businesses',SEED_BUSINESSES);
     setR(SEED_REPORTS); writeLocal('reports',SEED_REPORTS);
     setN(SEED_NOTIFS);  writeLocal('notifs',SEED_NOTIFS);
+    setT(SEED_TASKS);  writeLocal('tasks',SEED_TASKS);
   },[]);
 
-  return{users,setUsers,businesses,setBusinesses,reports,setReports,notifs,setNotifs,resetDatabase};
+  return{users,setUsers,businesses,setBusinesses,reports,setReports,notifs,setNotifs,tasks,setTasks,resetDatabase};
 }
 
 // ════════════════════════════════════════════════════════════
@@ -280,6 +287,33 @@ function getPendingInspections(user, businesses, reports) {
     }
   });
   return pending;
+}
+
+function filterNotifsForUser(notifs, user, businesses) {
+  if (user.role === "admin") {
+    return notifs.filter(n => !n.userId || n.audience === "admin");
+  }
+  return notifs.filter(n => {
+    if (n.userId) return n.userId === user.id;
+    if (n.audience === "admin") return false;
+    const myAssignedBiz = businesses.filter(b => user.assignedBusinesses.includes(b.id));
+    return myAssignedBiz.some(b => n.text.includes(b.name)) || n.text.includes(user.name);
+  });
+}
+
+function getPendingTasksForUser(tasks, user) {
+  const pending = tasks.filter(t => t.status === "pending");
+  if (user.role === "admin") return pending;
+  return pending.filter(t => t.inspectorId === user.id);
+}
+
+function completeTasksForReport(setTasks, businessId, inspectorId, reportId) {
+  const today = new Date().toISOString().split("T")[0];
+  setTasks(prev => prev.map(t =>
+    t.status === "pending" && t.businessId === businessId && t.inspectorId === inspectorId
+      ? { ...t, status: "completed", completedAt: today, reportId }
+      : t
+  ));
 }
 
 // ════════════════════════════════════════════════════════════
@@ -687,7 +721,7 @@ function NewReportModal({business,user,onSave,onClose}){
 // ════════════════════════════════════════════════════════════
 // DASHBOARD
 // ════════════════════════════════════════════════════════════
-function Dashboard({user,reports,businesses,users,setPage}){
+function Dashboard({user,reports,businesses,users,setPage,tasks}){
   const isMobile = useIsMobile();
   const myReports=user.role==="admin"?reports:reports.filter(r=>r.inspectorId===user.id);
   const avg=myReports.length?Math.round(myReports.reduce((a,b)=>a+b.score,0)/myReports.length):0;
@@ -696,6 +730,7 @@ function Dashboard({user,reports,businesses,users,setPage}){
 
   const pending = useMemo(() => getPendingInspections(user, businesses, reports), [user, businesses, reports]);
   const urgentPending = pending.filter(p => p.urgency === "high");
+  const assignedTasks = useMemo(() => getPendingTasksForUser(tasks || [], user), [tasks, user]);
 
   const byMonth=useMemo(()=>{
     const m={};
@@ -714,6 +749,30 @@ function Dashboard({user,reports,businesses,users,setPage}){
 
   return(
     <div className="page-dashboard">
+      {user.role === "inspector" && assignedTasks.length > 0 && (
+        <div onClick={() => setPage("alerts")} className="pulse-urgent" style={{
+          background: "rgba(168, 85, 247, 0.08)",
+          border: "1px solid rgba(168, 85, 247, 0.25)",
+          borderRadius: 16,
+          padding: "16px 20px",
+          marginBottom: 20,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 24 }}>🎯</span>
+            <div>
+              <div style={{ color: C.purple, fontWeight: 700, fontSize: 15 }}>משימות ביקורת הפתעה מהמנהל!</div>
+              <div style={{ color: C.textMuted, fontSize: 13 }}>יש לך {assignedTasks.length} משימות שהוקצו לך. לחץ כאן לצפייה וביצוע.</div>
+            </div>
+          </div>
+          <span style={{ color: C.purple, fontSize: 18, marginRight: "auto" }}>←</span>
+        </div>
+      )}
+
       {urgentPending.length > 0 && (
         <div onClick={() => setPage("alerts")} className="pulse-urgent" style={{
           background: "rgba(244, 63, 94, 0.08)",
@@ -881,13 +940,14 @@ function ReportsPage({reports,businesses,users,filterInspectorId}){
 // ════════════════════════════════════════════════════════════
 // BUSINESSES PAGE
 // ════════════════════════════════════════════════════════════
-function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setReports,user,onSaveReport}){
+function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setReports,user,onSaveReport,onAssignTask}){
   const isMobile = useIsMobile();
   const[search,setSearch]=useState("");
   const[typeFilter,setTypeFilter]=useState("all");
   const[riskFilter,setRiskFilter]=useState("all");
   const[modal,setModal]=useState(null);
   const[reportingBiz,setReportingBiz]=useState(null);
+  const[assignBiz,setAssignBiz]=useState(null);
   const[form,setForm]=useState({name:"",type:"מסעדה",address:"",license:"",phone:"",active:true,risk:"low"});
   const[saving,setSaving]=useState(false);
 
@@ -958,6 +1018,7 @@ function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setRepo
                 </div>
                 <div style={{display:"flex",gap:8,width:isMobile?"100%":"auto",justifyContent:isMobile?"flex-end":"flex-start", flexWrap:"wrap"}}>
                   <button onClick={()=>setReportingBiz(biz)} style={{background:"rgba(56,189,248,0.12)",border:"1px solid rgba(56,189,248,0.25)",borderRadius:7,padding:"5px 10px",color:"#38bdf8",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>📋 דווח</button>
+                  {user.role==="admin"&&onAssignTask&&<button onClick={()=>setAssignBiz(biz)} style={{background:"rgba(168,85,247,0.12)",border:"1px solid rgba(168,85,247,0.25)",borderRadius:7,padding:"5px 10px",color:C.purple,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>🎯 משימה</button>}
                   <button onClick={()=>openEdit(biz)} style={{background:"rgba(255,255,255,0.07)",border:"none",borderRadius:7,padding:"5px 10px",color:C.textMuted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>עריכה</button>
                   <button onClick={()=>deleteBiz(biz)} style={{background:"rgba(239,68,68,0.08)",border:"none",borderRadius:7,padding:"5px 10px",color:"#fca5a5",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>🗑 מחק</button>
                 </div>
@@ -1013,6 +1074,16 @@ function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setRepo
 
       {reportingBiz&&(
         <NewReportModal business={reportingBiz} user={user} onSave={(d)=>{onSaveReport(d);setReportingBiz(null);}} onClose={()=>setReportingBiz(null)} />
+      )}
+
+      {assignBiz&&onAssignTask&&(
+        <AssignTaskModal
+          businesses={businesses}
+          users={users}
+          preselectedBusinessId={assignBiz.id}
+          onAssign={(data)=>{onAssignTask(data);setAssignBiz(null);}}
+          onClose={()=>setAssignBiz(null)}
+        />
       )}
     </div>
   );
@@ -1155,51 +1226,287 @@ function UsersPage({users,setUsers,businesses,reports,user,setUser}){
 }
 
 // ════════════════════════════════════════════════════════════
+// ASSIGN SURPRISE INSPECTION TASK MODAL
+// ════════════════════════════════════════════════════════════
+function AssignTaskModal({ businesses, users, preselectedBusinessId, onAssign, onClose }) {
+  const isMobile = useIsMobile();
+  const inspectors = users.filter(u => u.role === "inspector" && u.active);
+  const [businessId, setBusinessId] = useState(preselectedBusinessId || businesses[0]?.id || "");
+  const [inspectorId, setInspectorId] = useState(inspectors[0]?.id || "");
+  const [notes, setNotes] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+
+  const submit = () => {
+    if (!businessId || !inspectorId) {
+      setErr("יש לבחור עסק ומפקח");
+      return;
+    }
+    setSaving(true);
+    setTimeout(() => {
+      onAssign({
+        businessId: +businessId,
+        inspectorId: +inspectorId,
+        notes: notes.trim(),
+        dueDate: dueDate || null,
+      });
+      setSaving(false);
+      onClose();
+    }, 300);
+  };
+
+  return (
+    <Modal onClose={onClose} width={520}>
+      <ModalHead
+        title="🎯 שליחת משימת ביקורת הפתעה"
+        sub="המפקח יקבל התראה מיידית ומשימה בדף ההתראות"
+        onClose={onClose}
+      />
+      <div style={{ display: "grid", gap: 14 }}>
+        <div>
+          <label style={{ color: C.textMuted, fontSize: 12, display: "block", marginBottom: 5 }}>עסק לביקורת</label>
+          <select value={businessId} onChange={e => setBusinessId(e.target.value)} style={{ ...inp, background: "#131f38" }}>
+            {businesses.filter(b => b.active).map(b => (
+              <option key={b.id} value={b.id}>{b.name} · {b.type}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label style={{ color: C.textMuted, fontSize: 12, display: "block", marginBottom: 5 }}>מפקח אחראי</label>
+          <select value={inspectorId} onChange={e => setInspectorId(e.target.value)} style={{ ...inp, background: "#131f38" }}>
+            {inspectors.map(u => (
+              <option key={u.id} value={u.id}>{u.name} (@{u.username})</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label style={{ color: C.textMuted, fontSize: 12, display: "block", marginBottom: 5 }}>הוראות למפקח (אופציונלי)</label>
+          <textarea
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            rows={3}
+            placeholder="למשל: ביקורת הפתעה בשעות הערב, לבדוק ניקיון מטבח..."
+            style={{ ...inp, resize: "vertical", lineHeight: 1.6 }}
+          />
+        </div>
+        <div>
+          <label style={{ color: C.textMuted, fontSize: 12, display: "block", marginBottom: 5 }}>מועד יעד (אופציונלי)</label>
+          <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} style={{ ...inp, colorScheme: "dark" }} />
+        </div>
+      </div>
+      {err && (
+        <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.22)", borderRadius: 8, padding: "9px 14px", color: "#fca5a5", fontSize: 13, marginTop: 12 }}>
+          {err}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 10, marginTop: 22, flexDirection: isMobile ? "column" : "row" }}>
+        <PrimaryBtn onClick={submit} disabled={saving || inspectors.length === 0} style={{ flex: 1, justifyContent: "center", padding: 12 }}>
+          {saving ? "שולח..." : "📤 שלח משימה למפקח"}
+        </PrimaryBtn>
+        <GhostBtn onClick={onClose}>ביטול</GhostBtn>
+      </div>
+    </Modal>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
 // ALERTS PAGE
 // ════════════════════════════════════════════════════════════
-function AlertsPage({ notifs, setNotifs, reports, setReports, businesses, user }) {
+function AlertsPage({ notifs, setNotifs, tasks, setTasks, reports, setReports, businesses, users, user }) {
   const [reportingBiz, setReportingBiz] = useState(null);
+  const [assignOpen, setAssignOpen] = useState(false);
   const isMobile = useIsMobile();
-  const markAll = () => setNotifs(prev => prev.map(n => ({ ...n, read: true })));
+  const markAll = () => setNotifs(prev => prev.map(n => {
+    const isMine = filterNotifsForUser([n], user, businesses).length > 0;
+    return isMine ? { ...n, read: true } : n;
+  }));
   const dismiss = id => setNotifs(prev => prev.filter(n => n.id !== id));
-  
-  const typeIcon = { warning: "⚠️", info: "💡", success: "✅", error: "🔴" };
-  const typeColor = { warning: C.amber, info: C.blue, success: C.green, error: C.red };
+
+  const typeIcon = { warning: "⚠️", info: "💡", success: "✅", error: "🔴", task: "🎯" };
+  const typeColor = { warning: C.amber, info: C.blue, success: C.green, error: C.red, task: C.purple };
 
   const pendingInspections = useMemo(() => {
     return getPendingInspections(user, businesses, reports);
   }, [user, businesses, reports]);
 
+  const pendingTasks = useMemo(() => getPendingTasksForUser(tasks, user), [tasks, user]);
+
   const relevantNotifs = useMemo(() => {
-    if (user.role === "admin") return notifs;
-    return notifs.filter(n => {
-      const myAssignedBiz = businesses.filter(b => user.assignedBusinesses.includes(b.id));
-      return myAssignedBiz.some(b => n.text.includes(b.name)) || n.text.includes(user.name);
-    });
+    return filterNotifsForUser(notifs, user, businesses);
   }, [notifs, user, businesses]);
+
+  const assignTask = ({ businessId, inspectorId, notes, dueDate }) => {
+    const biz = businesses.find(b => b.id === businessId);
+    const insp = users.find(u => u.id === inspectorId);
+    const today = new Date().toISOString().split("T")[0];
+    const taskId = Date.now();
+    const task = {
+      id: taskId,
+      businessId,
+      inspectorId,
+      assignedBy: user.id,
+      type: "surprise_inspection",
+      status: "pending",
+      notes,
+      dueDate,
+      createdAt: today,
+      completedAt: null,
+      reportId: null,
+    };
+    setTasks(prev => [...prev, task]);
+    setNotifs(prev => [
+      ...prev,
+      {
+        id: taskId + 1,
+        type: "task",
+        text: `🎯 משימת ביקורת הפתעה: עליך לבצע ביקורת הפתעה ב"${biz?.name || "עסק"}"${notes ? ` — ${notes}` : ""}${dueDate ? ` (עד ${dueDate})` : ""}`,
+        date: today,
+        read: false,
+        userId: inspectorId,
+        taskId,
+      },
+      {
+        id: taskId + 2,
+        type: "info",
+        text: `נשלחה משימת ביקורת הפתעה ל${insp?.name || "מפקח"} עבור "${biz?.name || "עסק"}"`,
+        date: today,
+        read: false,
+        audience: "admin",
+      },
+    ]);
+  };
+
+  const cancelTask = (taskId) => {
+    if (!window.confirm("לבטל את המשימה?")) return;
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: "cancelled" } : t));
+  };
 
   const saveReport = (data) => {
     const newReport = { ...data, id: Date.now() };
     setReports(prev => [...prev, newReport]);
-    
+    completeTasksForReport(setTasks, data.businessId, user.id, newReport.id);
+
     const biz = businesses.find(b => b.id === data.businessId);
     const bizName = biz?.name || "עסק";
     const notifText = `התקבל דיווח חדש עבור "${bizName}" על ידי ${user.name} בציון ${data.score}`;
     const notifType = data.score < 70 ? "warning" : data.score >= 85 ? "success" : "info";
-    
-    const newNotif = {
+
+    setNotifs(prev => [...prev, {
       id: Date.now() + 1,
       type: notifType,
       text: notifText,
       date: new Date().toISOString().split("T")[0],
-      read: false
-    };
-    setNotifs(prev => [...prev, newNotif]);
+      read: false,
+      audience: "admin",
+    }]);
     setReportingBiz(null);
   };
 
   return (
     <div className="page-alerts">
+      {user.role === "admin" && (
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+            <div>
+              <h2 style={{ color: C.text, margin: "0 0 4px", fontSize: 18, fontWeight: 700 }}>🎯 משימות ביקורת הפתעה</h2>
+              <p style={{ color: C.textDim, fontSize: 13, margin: 0 }}>שלח למפקח משימה לבצע ביקורת הפתעה בעסק — הוא יקבל התראה מיידית</p>
+            </div>
+            <PrimaryBtn onClick={() => setAssignOpen(true)} icon="➕" style={{ width: isMobile ? "100%" : "auto", justifyContent: "center" }}>
+              שלח משימה חדשה
+            </PrimaryBtn>
+          </div>
+
+          {pendingTasks.length === 0 ? (
+            <div style={{ ...cardStyle, background: "rgba(99,102,241,0.04)", borderColor: "rgba(99,102,241,0.15)" }}>
+              <EmptyState icon="📭" title="אין משימות פתוחות" sub='לחץ על "שלח משימה חדשה" כדי להקצות ביקורת הפתעה למפקח.' />
+            </div>
+          ) : (
+            <div style={{ display: "grid", gap: 12 }}>
+              {pendingTasks.map(task => {
+                const biz = businesses.find(b => b.id === task.businessId);
+                const insp = users.find(u => u.id === task.inspectorId);
+                const admin = users.find(u => u.id === task.assignedBy);
+                return (
+                  <div key={task.id} style={{ ...cardStyle, borderRight: `5px solid ${C.purple}`, display: "flex", flexDirection: isMobile ? "column" : "row", gap: 14, alignItems: isMobile ? "stretch" : "center" }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+                        <span style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>{biz?.name || "עסק"}</span>
+                        <Tag color={C.purple} bg="rgba(168,85,247,0.12)">ביקורת הפתעה</Tag>
+                        {task.dueDate && <Tag color={C.amber} bg="rgba(245,158,11,0.1)">עד {task.dueDate}</Tag>}
+                      </div>
+                      <div style={{ color: C.textMuted, fontSize: 13, marginBottom: 4 }}>👤 מפקח: {insp?.name || "—"} · נשלח {task.createdAt}{admin ? ` על ידי ${admin.name}` : ""}</div>
+                      {task.notes && <div style={{ color: C.textDim, fontSize: 12, lineHeight: 1.5 }}>📝 {task.notes}</div>}
+                    </div>
+                    <GhostBtn onClick={() => cancelTask(task.id)} danger style={{ width: isMobile ? "100%" : "auto" }}>בטל משימה</GhostBtn>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {user.role === "inspector" && pendingTasks.length > 0 && (
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div>
+              <h2 style={{ color: C.text, margin: "0 0 4px", fontSize: 18, fontWeight: 700 }}>🎯 משימות שהוקצו לך</h2>
+              <p style={{ color: C.textDim, fontSize: 13, margin: 0 }}>ביקורות הפתעה שהמנהל הקצה לך — יש לבצע בהקדם</p>
+            </div>
+            <span style={{ background: "rgba(168,85,247,0.12)", color: C.purple, borderRadius: 10, padding: "4px 12px", fontSize: 12, fontWeight: 700 }}>
+              {pendingTasks.length} משימות
+            </span>
+          </div>
+          <div style={{ display: "grid", gap: 12 }}>
+            {pendingTasks.map(task => {
+              const biz = businesses.find(b => b.id === task.businessId);
+              return (
+                <div key={task.id} className="pulse-urgent" style={{
+                  ...cardStyle,
+                  display: "flex",
+                  flexDirection: isMobile ? "column" : "row",
+                  gap: 16,
+                  alignItems: isMobile ? "stretch" : "center",
+                  borderRight: `5px solid ${C.purple}`,
+                  background: "rgba(168,85,247,0.06)",
+                  borderColor: "rgba(168,85,247,0.25)",
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+                      <span style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>{biz?.name || "עסק"}</span>
+                      <Tag color={C.purple} bg="rgba(168,85,247,0.15)">ביקורת הפתעה</Tag>
+                      {task.dueDate && <span style={{ color: C.amber, fontSize: 12 }}>⏰ עד {task.dueDate}</span>}
+                    </div>
+                    <div style={{ color: C.textMuted, fontSize: 13, lineHeight: 1.5 }}>
+                      {task.notes || `המנהל הקצה לך לבצע ביקורת הפתעה ב"${biz?.name}".`}
+                    </div>
+                    <div style={{ color: C.textDim, fontSize: 11, marginTop: 4 }}>📅 התקבלה: {task.createdAt}</div>
+                  </div>
+                  <button
+                    onClick={() => setReportingBiz(biz)}
+                    style={{
+                      padding: "10px 18px",
+                      background: "linear-gradient(135deg, #a855f7, #6366f1)",
+                      border: "none",
+                      borderRadius: 10,
+                      color: "#fff",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      boxShadow: "0 4px 14px rgba(168,85,247,0.25)",
+                    }}
+                  >
+                    🎯 בצע ביקורת הפתעה
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div style={{ marginBottom: 32 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div>
@@ -1316,6 +1623,14 @@ function AlertsPage({ notifs, setNotifs, reports, setReports, businesses, user }
       {reportingBiz && (
         <NewReportModal business={reportingBiz} user={user} onSave={saveReport} onClose={() => setReportingBiz(null)} />
       )}
+      {assignOpen && (
+        <AssignTaskModal
+          businesses={businesses}
+          users={users}
+          onAssign={assignTask}
+          onClose={() => setAssignOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -1367,7 +1682,7 @@ function MyBusinesses({user,businesses,reports,onSaveReport}){
 // APP ROOT
 // ════════════════════════════════════════════════════════════
 export default function App(){
-  const{users,setUsers,businesses,setBusinesses,reports,setReports,notifs,setNotifs,resetDatabase}=useDB();
+  const{users,setUsers,businesses,setBusinesses,reports,setReports,notifs,setNotifs,tasks,setTasks,resetDatabase}=useDB();
   const[user,setUser] = useState(() => {
     try {
       const stored = localStorage.getItem('loggedUser');
@@ -1396,30 +1711,77 @@ export default function App(){
     return getPendingInspections(user, businesses, reports);
   }, [user, businesses, reports]);
 
-  const unreadNotifs = notifs.filter(n => !n.read).length;
+  const pendingAssignedTasks = useMemo(() => {
+    if (!user) return 0;
+    return getPendingTasksForUser(tasks, user).length;
+  }, [user, tasks]);
+
+  const unreadNotifs = user ? filterNotifsForUser(notifs, user, businesses).filter(n => !n.read).length : 0;
   const inspectorBadgeCount = unreadNotifs + pendingInspections.length;
-  const adminBadgeCount = unreadNotifs;
+  const adminBadgeCount = unreadNotifs + pendingAssignedTasks;
+
+  const handleAssignTask = ({ businessId, inspectorId, notes, dueDate }) => {
+    const biz = businesses.find(b => b.id === businessId);
+    const insp = users.find(u => u.id === inspectorId);
+    const today = new Date().toISOString().split("T")[0];
+    const taskId = Date.now();
+    const task = {
+      id: taskId,
+      businessId,
+      inspectorId,
+      assignedBy: user.id,
+      type: "surprise_inspection",
+      status: "pending",
+      notes,
+      dueDate,
+      createdAt: today,
+      completedAt: null,
+      reportId: null,
+    };
+    setTasks(prev => [...prev, task]);
+    setNotifs(prev => [
+      ...prev,
+      {
+        id: taskId + 1,
+        type: "task",
+        text: `🎯 משימת ביקורת הפתעה: עליך לבצע ביקורת הפתעה ב"${biz?.name || "עסק"}"${notes ? ` — ${notes}` : ""}${dueDate ? ` (עד ${dueDate})` : ""}`,
+        date: today,
+        read: false,
+        userId: inspectorId,
+        taskId,
+      },
+      {
+        id: taskId + 2,
+        type: "info",
+        text: `נשלחה משימת ביקורת הפתעה ל${insp?.name || "מפקח"} עבור "${biz?.name || "עסק"}"`,
+        date: today,
+        read: false,
+        audience: "admin",
+      },
+    ]);
+  };
 
   const handleAddReport = (reportData) => {
     const newReport = { ...reportData, id: Date.now() };
     setReports(prev => [...prev, newReport]);
-    
+    completeTasksForReport(setTasks, reportData.businessId, reportData.inspectorId, newReport.id);
+
     const biz = businesses.find(b => b.id === reportData.businessId);
     const insp = users.find(u => u.id === reportData.inspectorId);
     const bizName = biz?.name || "עסק";
     const inspName = insp?.name || "מפקח";
-    
+
     const notifText = `התקבל דיווח חדש עבור "${bizName}" על ידי ${inspName} בציון ${reportData.score}`;
     const notifType = reportData.score < 70 ? "warning" : reportData.score >= 85 ? "success" : "info";
-    
-    const newNotif = {
+
+    setNotifs(prev => [...prev, {
       id: Date.now() + 1,
       type: notifType,
       text: notifText,
       date: new Date().toISOString().split("T")[0],
-      read: false
-    };
-    setNotifs(prev => [...prev, newNotif]);
+      read: false,
+      audience: "admin",
+    }]);
   };
 
   if(!user)return<LoginPage users={users} onLogin={u=>{setUser(u);setPage("dashboard");}} />;
@@ -1636,11 +1998,11 @@ export default function App(){
 
         {/* Content Body */}
         <div style={{padding: isMobile ? "0 16px 100px" : "0 28px 32px",flex:1}}>
-          {page==="dashboard"&&<Dashboard user={user} reports={reports} businesses={businesses} users={users} setPage={setPage} />}
+          {page==="dashboard"&&<Dashboard user={user} reports={reports} businesses={businesses} users={users} setPage={setPage} tasks={tasks} />}
           {page==="reports"&&user.role==="admin"&&<ReportsPage reports={reports} businesses={businesses} users={users} />}
-          {page==="businesses"&&user.role==="admin"&&<BusinessesPage businesses={businesses} setBusinesses={setBusinesses} reports={reports} users={users} setUsers={setUsers} setReports={setReports} user={user} onSaveReport={handleAddReport} />}
+          {page==="businesses"&&user.role==="admin"&&<BusinessesPage businesses={businesses} setBusinesses={setBusinesses} reports={reports} users={users} setUsers={setUsers} setReports={setReports} user={user} onSaveReport={handleAddReport} onAssignTask={handleAssignTask} />}
           {page==="users"&&user.role==="admin"&&<UsersPage users={users} setUsers={setUsers} businesses={businesses} reports={reports} user={user} setUser={setUser} />}
-          {page==="alerts"&&<AlertsPage notifs={notifs} setNotifs={setNotifs} reports={reports} setReports={setReports} businesses={businesses} user={user} />}
+          {page==="alerts"&&<AlertsPage notifs={notifs} setNotifs={setNotifs} tasks={tasks} setTasks={setTasks} reports={reports} setReports={setReports} businesses={businesses} users={users} user={user} />}
           {page==="myBusinesses"&&user.role==="inspector"&&<MyBusinesses user={user} businesses={businesses} reports={reports} onSaveReport={handleAddReport} />}
           {page==="myReports"&&user.role==="inspector"&&<ReportsPage reports={reports} businesses={businesses} users={users} filterInspectorId={user.id} />}
         </div>
