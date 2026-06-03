@@ -174,45 +174,65 @@ function useDB(){
 }
 
 // ════════════════════════════════════════════════════════════
-// DESIGN TOKENS & UTILITIES
+// DESIGN TOKENS & UTILITIES — Classic municipal / colorful
 // ════════════════════════════════════════════════════════════
+const FONT = "'Heebo', 'Segoe UI', Tahoma, Arial, sans-serif";
 const C = {
-  bg: "#060a13",
-  sidebar: "rgba(13, 20, 40, 0.85)",
-  card: "rgba(17, 24, 39, 0.45)",
-  cardBorder: "rgba(255, 255, 255, 0.08)",
-  blue: "#38bdf8",
-  blueD: "#0284c7",
-  accent: "#6366f1",
-  green: "#10b981",
-  amber: "#f59e0b",
-  red: "#f43f5e",
-  purple: "#a855f7",
-  text: "#f8fafc",
-  textMuted: "rgba(248, 250, 252, 0.65)",
-  textDim: "rgba(248, 250, 252, 0.4)"
+  bg: "#eef4fb",
+  bgAlt: "#e3edf7",
+  sidebar: "#1e3a5f",
+  sidebarDark: "#152a45",
+  sidebarText: "#ffffff",
+  sidebarMuted: "rgba(255,255,255,0.72)",
+  card: "#ffffff",
+  cardBorder: "#dce4ef",
+  cardShadow: "0 4px 20px rgba(30, 58, 95, 0.08)",
+  primary: "#1565c0",
+  primaryLight: "#e3f2fd",
+  blue: "#1976d2",
+  blueD: "#0d47a1",
+  teal: "#00897b",
+  tealLight: "#e0f2f1",
+  accent: "#5e35b1",
+  accentLight: "#ede7f6",
+  green: "#2e7d32",
+  greenLight: "#e8f5e9",
+  amber: "#ef6c00",
+  amberLight: "#fff3e0",
+  red: "#c62828",
+  redLight: "#ffebee",
+  purple: "#6a1b9a",
+  purpleLight: "#f3e5f5",
+  gold: "#f9a825",
+  text: "#1e293b",
+  textMuted: "#64748b",
+  textDim: "#94a3b8",
 };
 const inp = {
   width: "100%",
   padding: "11px 14px",
-  background: "rgba(255, 255, 255, 0.04)",
-  border: "1px solid rgba(255, 255, 255, 0.08)",
-  borderRadius: 12,
+  background: "#f8fafc",
+  border: "1px solid #cbd5e1",
+  borderRadius: 10,
   color: C.text,
   fontSize: 14,
   outline: "none",
   boxSizing: "border-box",
   direction: "rtl",
   fontFamily: "inherit",
-  transition: "all 0.2s"
+  transition: "border-color 0.2s, box-shadow 0.2s",
 };
 const cardStyle = {
   background: C.card,
-  backdropFilter: "blur(16px)",
-  WebkitBackdropFilter: "blur(16px)",
   border: `1px solid ${C.cardBorder}`,
-  borderRadius: 18,
-  padding: "22px 24px"
+  borderRadius: 14,
+  padding: "20px 22px",
+  boxShadow: C.cardShadow,
+};
+const pageHeaderStyle = {
+  background: C.card,
+  borderBottom: `3px solid ${C.primary}`,
+  boxShadow: "0 2px 12px rgba(30,58,95,0.06)",
 };
 
 function useIsMobile() {
@@ -320,38 +340,40 @@ function completeTasksForReport(setTasks, businessId, inspectorId, reportId) {
 // SMALL COMPONENTS
 // ════════════════════════════════════════════════════════════
 function Avatar({name,size=36,role}){
-  const bg=role==="admin"?"linear-gradient(135deg,#ef4444,#b91c1c)":role==="inspector"?"linear-gradient(135deg,#3b82f6,#6366f1)":"linear-gradient(135deg,#10b981,#059669)";
-  return<div style={{width:size,height:size,borderRadius:size/3,background:bg,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:size*0.38,flexShrink:0}}>{name?.[0]||"?"}</div>;
+  const bg=role==="admin"?"linear-gradient(135deg,#c62828,#8e0000)":role==="inspector"?"linear-gradient(135deg,#1565c0,#00897b)":"linear-gradient(135deg,#2e7d32,#1b5e20)";
+  return<div style={{width:size,height:size,borderRadius:size/3,background:bg,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:size*0.38,flexShrink:0,boxShadow:"0 2px 8px rgba(0,0,0,0.15)"}}>{name?.[0]||"?"}</div>;
 }
 
 function ScoreBadge({score,large}){
   const col=score>=85?C.green:score>=70?C.amber:C.red;
-  const bg=score>=85?"rgba(34,197,94,0.12)":score>=70?"rgba(245,158,11,0.12)":"rgba(239,68,68,0.12)";
-  return<span style={{background:bg,color:col,border:`1px solid ${col}25`,borderRadius:large?10:7,padding:large?"8px 16px":"3px 11px",fontWeight:700,fontSize:large?18:13,display:"inline-block"}}>{score}</span>;
+  const bg=score>=85?C.greenLight:score>=70?C.amberLight:C.redLight;
+  return<span style={{background:bg,color:col,border:`2px solid ${col}30`,borderRadius:large?10:8,padding:large?"8px 16px":"4px 12px",fontWeight:800,fontSize:large?18:13,display:"inline-block"}}>{score}</span>;
 }
 
 function RiskBadge({risk}){
-  const map={high:["סיכון גבוה",C.red,"rgba(239,68,68,0.1)"],medium:["סיכון בינוני",C.amber,"rgba(245,158,11,0.1)"],low:["תקין",C.green,"rgba(34,197,94,0.1)"]};
+  const map={high:["סיכון גבוה",C.red,C.redLight],medium:["סיכון בינוני",C.amber,C.amberLight],low:["תקין",C.green,C.greenLight]};
   const[l,col,bg]=map[risk]||map.low;
-  return<span style={{background:bg,color:col,borderRadius:6,padding:"2px 9px",fontSize:11,fontWeight:600}}>{l}</span>;
+  return<span style={{background:bg,color:col,borderRadius:20,padding:"3px 10px",fontSize:11,fontWeight:700,border:`1px solid ${col}35`}}>{l}</span>;
 }
 
-function Tag({children,color=C.accent,bg="rgba(99,102,241,0.12)"}){
-  return<span style={{background:bg,color,borderRadius:6,padding:"2px 9px",fontSize:12}}>{children}</span>;
+function Tag({children,color=C.primary,bg=C.primaryLight}){
+  return<span style={{background:bg,color,borderRadius:20,padding:"3px 10px",fontSize:12,fontWeight:600,border:`1px solid ${color}25`}}>{children}</span>;
 }
 
 function Pill({children,active,onClick}){
-  return<button onClick={onClick} style={{padding:"7px 16px",border:`1px solid ${active?C.blue:"rgba(255,255,255,0.1)"}`,borderRadius:20,background:active?"rgba(59,130,246,0.15)":"transparent",color:active?"#93c5fd":C.textMuted,cursor:"pointer",fontSize:13,fontWeight:active?600:400,transition:"all .15s"}}>{children}</button>;
+  return<button onClick={onClick} className="pill-btn" style={{padding:"7px 16px",border:`2px solid ${active?C.primary:"#cbd5e1"}`,borderRadius:20,background:active?C.primaryLight:"#fff",color:active?C.primary:C.textMuted,cursor:"pointer",fontSize:13,fontWeight:active?700:500,transition:"all .15s",fontFamily:"inherit"}}>{children}</button>;
 }
 
 function Stat({icon,value,label,color,delta}){
+  const accent=color||C.primary;
+  const tint=color===C.amber?C.amberLight:color===C.red?C.redLight:color===C.purple?C.purpleLight:color===C.teal?C.tealLight:C.primaryLight;
   return(
-    <div style={{...cardStyle,position:"relative",overflow:"hidden"}}>
-      <div style={{position:"absolute",top:-10,left:-10,fontSize:60,opacity:.04}}>{icon}</div>
-      <div style={{color:color||C.textMuted,fontSize:22,marginBottom:6}}>{icon}</div>
-      <div style={{color:color||C.text,fontSize:28,fontWeight:800,lineHeight:1}}>{value}</div>
-      {delta!=null&&<div style={{color:delta>=0?C.green:C.red,fontSize:11,marginTop:3}}>{delta>=0?"↑":"↓"} {Math.abs(delta)}% מהחודש שעבר</div>}
-      <div style={{color:C.textDim,fontSize:12,marginTop:6}}>{label}</div>
+    <div style={{...cardStyle,position:"relative",overflow:"hidden",borderTop:`4px solid ${accent}`,background:`linear-gradient(145deg, ${tint} 0%, #fff 55%)`}}>
+      <div style={{position:"absolute",top:-8,left:-8,fontSize:56,opacity:.12}}>{icon}</div>
+      <div style={{fontSize:26,marginBottom:8,lineHeight:1}}>{icon}</div>
+      <div style={{color:accent,fontSize:30,fontWeight:800,lineHeight:1}}>{value}</div>
+      {delta!=null&&<div style={{color:delta>=0?C.green:C.red,fontSize:11,marginTop:4,fontWeight:600}}>{delta>=0?"↑":"↓"} {Math.abs(delta)}% מהחודש שעבר</div>}
+      <div style={{color:C.textMuted,fontSize:13,marginTop:8,fontWeight:600}}>{label}</div>
     </div>
   );
 }
@@ -359,8 +381,8 @@ function Stat({icon,value,label,color,delta}){
 function Modal({onClose,children,width=600}){
   const isMobile = useIsMobile();
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:isMobile?"flex-end":"center",justifyContent:"center",zIndex:300,direction:"rtl",padding:isMobile?0:16}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
-      <div className="modal-inner" style={{background:"#131f38",border:"1px solid rgba(255,255,255,0.1)",borderRadius:isMobile?"24px 24px 0 0":22,width:isMobile?"100%":width,maxWidth:"100vw",maxHeight:isMobile?"90vh":"92vh",overflowY:"auto",padding:isMobile?"24px 20px 40px":"32px 36px"}}>
+    <div style={{position:"fixed",inset:0,background:"rgba(15,23,42,0.45)",display:"flex",alignItems:isMobile?"flex-end":"center",justifyContent:"center",zIndex:300,direction:"rtl",padding:isMobile?0:16}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal-inner" style={{background:"#fff",border:`1px solid ${C.cardBorder}`,borderRadius:isMobile?"20px 20px 0 0":16,width:isMobile?"100%":width,maxWidth:"100vw",maxHeight:isMobile?"90vh":"92vh",overflowY:"auto",padding:isMobile?"24px 20px 40px":"28px 32px",boxShadow:"0 24px 48px rgba(30,58,95,0.18)"}}>
         {children}
       </div>
     </div>
@@ -371,7 +393,7 @@ function ModalHead({title,sub,onClose}){
   return(
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:26}}>
       <div><h2 style={{color:C.text,margin:"0 0 4px",fontSize:20,fontWeight:700}}>{title}</h2>{sub&&<p style={{color:C.textMuted,margin:0,fontSize:13}}>{sub}</p>}</div>
-      <button onClick={onClose} style={{background:"rgba(255,255,255,0.07)",border:"none",borderRadius:8,width:34,height:34,color:C.textMuted,cursor:"pointer",fontSize:18,flexShrink:0,fontFamily:"inherit"}}>✕</button>
+      <button onClick={onClose} style={{background:C.bg,border:`1px solid ${C.cardBorder}`,borderRadius:8,width:34,height:34,color:C.textMuted,cursor:"pointer",fontSize:18,flexShrink:0,fontFamily:"inherit"}}>✕</button>
     </div>
   );
 }
@@ -379,35 +401,35 @@ function ModalHead({title,sub,onClose}){
 function PrimaryBtn({onClick,disabled,children,style={},icon}){
   const isMobile = useIsMobile();
   const fullWidth = isMobile && style && style.fullwidth!==false;
-  const baseStyle = {padding:"11px 22px",background:disabled?"rgba(59,130,246,0.3)":"linear-gradient(135deg,#3b82f6,#4f46e5)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:600,cursor:disabled?"default":"pointer",display:"flex",alignItems:"center",gap:6};
-  return<button onClick={onClick} disabled={disabled} style={{...baseStyle, ...(fullWidth?{width:"100%"}:{}), ...style}}>{icon&&<span>{icon}</span>}{children}</button>;
+  const baseStyle = {padding:"11px 22px",background:disabled?"#94a3b8":"linear-gradient(135deg,#1565c0,#00897b)",border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:700,cursor:disabled?"default":"pointer",display:"flex",alignItems:"center",gap:6,boxShadow:disabled?"none":"0 4px 14px rgba(21,101,192,0.28)",fontFamily:"inherit",transition:"transform 0.15s, box-shadow 0.15s"};
+  return<button onClick={onClick} disabled={disabled} className="primary-btn" style={{...baseStyle, ...(fullWidth?{width:"100%"}:{}), ...style}}>{icon&&<span>{icon}</span>}{children}</button>;
 }
 function GhostBtn({onClick,children,style={},danger}){
   const isMobile = useIsMobile();
-  const baseStyle = {padding:"11px 18px",background:danger?"rgba(239,68,68,0.07)":"rgba(255,255,255,0.05)",border:`1px solid ${danger?"rgba(239,68,68,0.22)":"rgba(255,255,255,0.1)"}`,borderRadius:10,color:danger?"#fca5a5":C.textMuted,cursor:"pointer",fontSize:14,fontFamily:"inherit"};
+  const baseStyle = {padding:"11px 18px",background:danger?C.redLight:"#fff",border:`2px solid ${danger?C.red+"50":C.cardBorder}`,borderRadius:10,color:danger?C.red:C.textMuted,cursor:"pointer",fontSize:14,fontFamily:"inherit",fontWeight:600};
   return<button onClick={onClick} style={{...baseStyle, ...(isMobile?{width:"100%"}:{}), ...style}}>{children}</button>;
 }
 
 function SectionTitle({children}){
-  return<p style={{color:C.textMuted,fontSize:11,fontWeight:700,margin:"0 0 12px",textTransform:"uppercase",letterSpacing:1.5}}>{children}</p>;
+  return<p style={{color:C.primary,fontSize:12,fontWeight:800,margin:"0 0 12px",textTransform:"uppercase",letterSpacing:1.2}}>{children}</p>;
 }
 
-function ScoreBar({value,max=5,color=C.blue}){
+function ScoreBar({value,max=5,color=C.primary}){
   return(
-    <div style={{display:"flex",gap:3,alignItems:"center"}}>
+    <div style={{display:"flex",gap:4,alignItems:"center"}}>
       {Array.from({length:max},(_,i)=>(
-        <div key={i} style={{height:6,flex:1,borderRadius:3,background:i<value?color:"rgba(255,255,255,0.08)"}} />
+        <div key={i} style={{height:8,flex:1,borderRadius:4,background:i<value?color:"#e2e8f0"}} />
       ))}
     </div>
   );
 }
 
 function EmptyState({icon,title,sub}){
-  return<div style={{textAlign:"center",padding:"64px 0",color:C.textDim}}><div style={{fontSize:48,marginBottom:12}}>{icon}</div><div style={{fontSize:16,color:C.textMuted,marginBottom:6}}>{title}</div>{sub&&<div style={{fontSize:13}}>{sub}</div>}</div>;
+  return<div style={{textAlign:"center",padding:"48px 16px",color:C.textDim}}><div style={{fontSize:52,marginBottom:12}}>{icon}</div><div style={{fontSize:17,color:C.text,fontWeight:700,marginBottom:6}}>{title}</div>{sub&&<div style={{fontSize:14,color:C.textMuted}}>{sub}</div>}</div>;
 }
 
 const CT={
-  tooltip:{background:"#1a2744",border:"1px solid rgba(255,255,255,0.1)",borderRadius:8,color:C.text,fontSize:12,direction:"rtl"},
+  tooltip:{background:"#fff",border:`1px solid ${C.cardBorder}`,borderRadius:10,color:C.text,fontSize:12,direction:"rtl",boxShadow:C.cardShadow},
 };
 
 // ════════════════════════════════════════════════════════════
@@ -424,29 +446,28 @@ function LoginPage({users,onLogin}){
     },500);
   };
   return(
-    <div style={{minHeight:"100vh",background:`radial-gradient(ellipse at 30% 20%, rgba(56,189,248,0.15) 0%, transparent 50%), radial-gradient(ellipse at 80% 80%, rgba(99,102,241,0.12) 0%, transparent 50%), ${C.bg}`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Segoe UI',Tahoma,Arial,sans-serif",direction:"rtl",padding:16}}>
-      <div style={{width:"100%",maxWidth:420}}>
-        <div style={{textAlign:"center",marginBottom:30}}>
-          <div style={{width:72,height:72,borderRadius:22,background:"linear-gradient(135deg,#38bdf8,#6366f1)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px",fontSize:32,boxShadow:"0 8px 30px rgba(56,189,248,0.25)"}}>🏛️</div>
-          <h1 style={{color:C.text,fontSize:26,fontWeight:800,margin:"0 0 6px",letterSpacing:-.5}}>מערכת ביקורת עסקים</h1>
-          <p style={{color:C.textMuted,fontSize:14,margin:0}}>פלטפורמה מתקדמת לניהול ביקורות עירוניות</p>
+    <div style={{minHeight:"100vh",background:`linear-gradient(145deg, ${C.bg} 0%, #dbeafe 40%, ${C.bgAlt} 100%)`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:FONT,direction:"rtl",padding:16}}>
+      <div style={{width:"100%",maxWidth:440}}>
+        <div style={{textAlign:"center",marginBottom:28}}>
+          <div style={{width:80,height:80,borderRadius:20,background:"linear-gradient(135deg,#1565c0,#00897b)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 18px",fontSize:36,boxShadow:"0 8px 28px rgba(21,101,192,0.35)",border:"3px solid #fff"}}>🏛️</div>
+          <h1 style={{color:C.sidebar,fontSize:28,fontWeight:800,margin:"0 0 8px",letterSpacing:-.5}}>מערכת ביקורת עסקים</h1>
+          <p style={{color:C.textMuted,fontSize:15,margin:0,fontWeight:500}}>פלטפורמה עירונית לניהול ביקורות ופיקוח</p>
         </div>
-        <div style={{background:"rgba(17,24,39,0.6)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:24,padding:"36px 32px",boxShadow:"0 12px 40px rgba(0,0,0,0.4)"}}>
+        <div style={{background:"#fff",border:`1px solid ${C.cardBorder}`,borderRadius:20,padding:"32px 28px",boxShadow:"0 12px 40px rgba(30,58,95,0.12)",borderTop:`5px solid ${C.gold}`}}>
           {[["שם משתמש",u,setU,"text","👤"],["סיסמה",p,setP,"password","🔑"]].map(([l,v,fn,t,ic])=>(
             <div key={l} style={{marginBottom:16}}>
-              <label style={{color:C.textMuted,fontSize:12,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:.8}}>{l}</label>
+              <label style={{color:C.textMuted,fontSize:12,fontWeight:700,display:"block",marginBottom:6}}>{l}</label>
               <div style={{position:"relative"}}>
                 <span style={{position:"absolute",right:13,top:"50%",transform:"translateY(-50%)",fontSize:16}}>{ic}</span>
                 <input type={t} value={v} onChange={e=>fn(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()} placeholder={`הכנס ${l}`} style={{...inp,paddingRight:40,fontSize:15}} />
               </div>
             </div>
           ))}
-          {err&&<div style={{background:"rgba(244,63,94,0.1)",border:"1px solid rgba(244,63,94,0.25)",borderRadius:10,padding:"10px 14px",color:"#fca5a5",fontSize:13,marginBottom:14,textAlign:"center"}}>⚠ {err}</div>}
+          {err&&<div style={{background:C.redLight,border:`1px solid ${C.red}40`,borderRadius:10,padding:"10px 14px",color:C.red,fontSize:13,marginBottom:14,textAlign:"center",fontWeight:600}}>⚠ {err}</div>}
           <PrimaryBtn onClick={go} disabled={loading} style={{width:"100%",justifyContent:"center",padding:14,fontSize:16,marginTop:4,borderRadius:12}}>{loading?"מתחבר...":"כניסה למערכת →"}</PrimaryBtn>
         </div>
       </div>
-        {/* Login footer */}
-        <div style={{position:"fixed",left:0,right:0,bottom:0,background:"rgba(6,10,19,0.95)",color:"rgba(248,250,252,0.9)",fontSize:12,padding:"10px 12px",textAlign:"center",borderTop:"1px solid rgba(255,255,255,0.04)",zIndex:1100}}>
+        <div style={{position:"fixed",left:0,right:0,bottom:0,background:C.sidebar,color:C.sidebarMuted,fontSize:12,padding:"10px 12px",textAlign:"center",zIndex:1100}}>
           © {new Date().getFullYear()} Avihai Yosipovich — כל הזכויות שמורות
         </div>
     </div>
@@ -472,36 +493,36 @@ function Sidebar({user,page,setPage,notifCount,onLogout}){
   ];
   const nav=user.role==="admin"?adminNav:inspNav;
   return(
-    <div style={{width:220,background:C.sidebar,backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderLeft:"1px solid rgba(255,255,255,0.06)",display:"flex",flexDirection:"column",flexShrink:0,height:"100vh",position:"sticky",top:0}}>
-      <div style={{padding:"24px 20px 20px",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:20}}>
-          <div style={{width:36,height:36,borderRadius:10,background:"linear-gradient(135deg,#38bdf8,#6366f1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,boxShadow:"0 4px 12px rgba(56,189,248,0.2)"}}>🏛️</div>
+    <div style={{width:240,background:`linear-gradient(180deg, ${C.sidebar} 0%, ${C.sidebarDark} 100%)`,display:"flex",flexDirection:"column",flexShrink:0,height:"100vh",position:"sticky",top:0,boxShadow:"4px 0 24px rgba(30,58,95,0.15)"}}>
+      <div style={{padding:"22px 18px 18px",borderBottom:"1px solid rgba(255,255,255,0.1)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:18}}>
+          <div style={{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#ffc107,#ef6c00)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,boxShadow:"0 4px 12px rgba(0,0,0,0.2)"}}>🏛️</div>
           <div style={{lineHeight:1.2}}>
-            <div style={{color:C.text,fontWeight:800,fontSize:14,letterSpacing:-0.3}}>ביקורת עסקים</div>
-            <div style={{color:C.textDim,fontSize:10}}>מערכת עירונית</div>
+            <div style={{color:C.sidebarText,fontWeight:800,fontSize:15,letterSpacing:-0.3}}>ביקורת עסקים</div>
+            <div style={{color:C.sidebarMuted,fontSize:11}}>מערכת עירונית</div>
           </div>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:10,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.04)",borderRadius:12,padding:"10px 12px"}}>
-          <Avatar name={user.name} size={32} role={user.role} />
+        <div style={{display:"flex",alignItems:"center",gap:10,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:12,padding:"10px 12px"}}>
+          <Avatar name={user.name} size={34} role={user.role} />
           <div style={{flex:1,minWidth:0}}>
-            <div style={{color:C.text,fontSize:12,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{user.name}</div>
-            <div style={{color:C.textDim,fontSize:10}}>{user.role==="admin"?"מנהל מערכת":"מפקח"}</div>
+            <div style={{color:C.sidebarText,fontSize:13,fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{user.name}</div>
+            <div style={{color:C.sidebarMuted,fontSize:11}}>{user.role==="admin"?"מנהל מערכת":"מפקח"}</div>
           </div>
         </div>
       </div>
-      <nav style={{flex:1,padding:"16px 12px",display:"flex",flexDirection:"column",gap:4}}>
+      <nav style={{flex:1,padding:"14px 10px",display:"flex",flexDirection:"column",gap:4}}>
         {nav.map(n=>(
           <button key={n.key} onClick={()=>setPage(n.key)}
-            style={{display:"flex",alignItems:"center",gap:10,padding:"11px 14px",borderRadius:12,border:"none",background:page===n.key?"rgba(56,189,248,0.1)":"transparent",color:page===n.key?C.text:C.textMuted,cursor:"pointer",fontSize:14,fontWeight:page===n.key?600:400,textAlign:"right",transition:"all .15s",position:"relative",fontFamily:"inherit"}}>
+            style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",borderRadius:10,border:"none",background:page===n.key?"rgba(255,255,255,0.14)":"transparent",color:page===n.key?C.sidebarText:C.sidebarMuted,cursor:"pointer",fontSize:14,fontWeight:page===n.key?700:500,textAlign:"right",transition:"all .15s",position:"relative",fontFamily:"inherit"}}>
             <span style={{fontSize:18}}>{n.icon}</span>
             <span style={{flex:1}}>{n.label}</span>
-            {n.badge>0&&<span style={{background:C.red,color:"#fff",borderRadius:10,minWidth:18,height:18,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,padding:"0 5px",boxShadow:"0 2px 8px rgba(244,63,94,0.3)"}}>{n.badge}</span>}
-            {page===n.key&&<div style={{position:"absolute",left:0,top:"20%",bottom:"20%",width:3,background:C.blue,borderRadius:2}} />}
+            {n.badge>0&&<span style={{background:C.red,color:"#fff",borderRadius:10,minWidth:20,height:20,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,padding:"0 6px"}}>{n.badge}</span>}
+            {page===n.key&&<div style={{position:"absolute",left:0,top:"18%",bottom:"18%",width:4,background:C.gold,borderRadius:2}} />}
           </button>
         ))}
       </nav>
-      <div style={{padding:"16px 12px",borderTop:"1px solid rgba(255,255,255,0.06)"}}>
-        <button onClick={onLogout} style={{width:"100%",display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:10,border:"none",background:"transparent",color:"#fca5a5",cursor:"pointer",fontSize:13,fontFamily:"inherit"}}>
+      <div style={{padding:"14px 10px",borderTop:"1px solid rgba(255,255,255,0.1)"}}>
+        <button onClick={onLogout} style={{width:"100%",display:"flex",alignItems:"center",gap:10,padding:"11px 14px",borderRadius:10,border:"1px solid rgba(255,255,255,0.15)",background:"rgba(255,255,255,0.06)",color:"#ffcdd2",cursor:"pointer",fontSize:13,fontFamily:"inherit",fontWeight:600}}>
           <span>🚪</span><span>התנתק</span>
         </button>
       </div>
@@ -525,7 +546,7 @@ function ReportDetailModal({report,businesses,users,onClose}){
       <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:24}}>
         <ScoreBadge score={report.score} large />
         <Tag>{biz?.type}</Tag>
-        <Tag color="#a5b4fc" bg="rgba(99,102,241,0.1)">{biz?.license}</Tag>
+        <Tag color={C.accent} bg={C.accentLight}>{biz?.license}</Tag>
         <span style={{background:`${urgCol}15`,color:urgCol,borderRadius:6,padding:"2px 10px",fontSize:12,fontWeight:600,display:"flex",alignItems:"center",gap:4}}>{urg} {urgLbl}</span>
         {report.followUp&&<Tag color={C.amber} bg="rgba(245,158,11,0.1)">מעקב: {report.followUp}</Tag>}
       </div>
@@ -546,7 +567,7 @@ function ReportDetailModal({report,businesses,users,onClose}){
         <div style={{...cardStyle,padding:16,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
           <ResponsiveContainer width="100%" height={160}>
             <RadarChart data={radarData}>
-              <PolarGrid stroke="rgba(255,255,255,0.1)" />
+              <PolarGrid stroke="#e2e8f0" />
               <PolarAngleAxis dataKey="cat" tick={{fill:C.textMuted,fontSize:11}} />
               <Radar dataKey="value" stroke={C.blue} fill={C.blue} fillOpacity={0.25} />
             </RadarChart>
@@ -557,7 +578,7 @@ function ReportDetailModal({report,businesses,users,onClose}){
       {report.observations&&(
         <div style={{marginBottom:18}}>
           <SectionTitle>👁 תצפיות המפקח</SectionTitle>
-          <div style={{background:"rgba(59,130,246,0.06)",border:"1px solid rgba(59,130,246,0.15)",borderRadius:12,padding:"16px 18px",color:"rgba(255,255,255,0.8)",fontSize:14,lineHeight:1.75}}>{report.observations}</div>
+          <div style={{background:C.primaryLight,border:`1px solid ${C.primary}30`,borderRadius:12,padding:"16px 18px",color:C.text,fontSize:14,lineHeight:1.75}}>{report.observations}</div>
         </div>
       )}
 
@@ -575,7 +596,7 @@ function ReportDetailModal({report,businesses,users,onClose}){
             {report.violations.map((v,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:12,background:"rgba(239,68,68,0.07)",border:"1px solid rgba(239,68,68,0.16)",borderRadius:10,padding:"10px 14px"}}>
                 <span style={{color:C.red,fontSize:18,flexShrink:0}}>⚠</span>
-                <span style={{color:"#fca5a5",fontSize:14}}>{v}</span>
+                <span style={{color:"#c62828",fontSize:14}}>{v}</span>
               </div>
             ))}
           </div>
@@ -583,16 +604,16 @@ function ReportDetailModal({report,businesses,users,onClose}){
       )}
 
       {report.violations.length===0&&(
-        <div style={{marginBottom:18,background:"rgba(34,197,94,0.06)",border:"1px solid rgba(34,197,94,0.15)",borderRadius:10,padding:"12px 16px",display:"flex",alignItems:"center",gap:10}}>
+          <div style={{marginBottom:18,background:C.greenLight,border:`1px solid ${C.green}30`,borderRadius:10,padding:"12px 16px",display:"flex",alignItems:"center",gap:10}}>
           <span style={{fontSize:20}}>✅</span>
-          <span style={{color:"#86efac",fontSize:14}}>לא נמצאו ממצאים — הביקורת עברה בהצלחה</span>
+          <span style={{color:C.green,fontSize:14,fontWeight:600}}>לא נמצאו ממצאים — הביקורת עברה בהצלחה</span>
         </div>
       )}
 
       {report.notes&&(
         <div>
           <SectionTitle>📝 הערות מסכמות</SectionTitle>
-          <div style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"14px 16px",color:C.textMuted,fontSize:14,lineHeight:1.7}}>{report.notes}</div>
+          <div style={{background:"#f8fafc",border:`1px solid ${C.cardBorder}`,borderRadius:10,padding:"14px 16px",color:C.textMuted,fontSize:14,lineHeight:1.7}}>{report.notes}</div>
         </div>
       )}
     </Modal>
@@ -689,7 +710,7 @@ function NewReportModal({business,user,onSave,onClose}){
       <div style={{marginBottom:18}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
           <SectionTitle>⚠ ממצאים / הפרות</SectionTitle>
-          <button onClick={()=>setViolations([...violations,""])} style={{background:"rgba(59,130,246,0.1)",border:"1px solid rgba(59,130,246,0.22)",borderRadius:6,padding:"4px 10px",color:"#93c5fd",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>+ הוסף ממצא</button>
+          <button onClick={()=>setViolations([...violations,""])} style={{background:"rgba(59,130,246,0.1)",border:"1px solid rgba(59,130,246,0.22)",borderRadius:6,padding:"4px 10px",color:"#1565c0",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>+ הוסף ממצא</button>
         </div>
         {violations.map((v,i)=>(
           <div key={i} style={{display:"flex",gap:8,marginBottom:8}}>
@@ -744,15 +765,15 @@ function Dashboard({user,reports,businesses,users,setPage,tasks}){
     return Object.values(m).map(x=>({...x,avg:Math.round(x.scores.reduce((a,b)=>a+b,0)/x.scores.length)}));
   },[myReports,businesses]);
 
-  const COLORS=[C.blue,"#6366f1","#8b5cf6",C.green,C.amber,C.red,"#ec4899","#14b8a6"];
+  const COLORS=[C.blue,C.teal,C.accent,C.green,C.amber,C.red,"#00838f","#4527a0"];
   const recent=[...myReports].sort((a,b)=>b.id-a.id).slice(0,5);
 
   return(
     <div className="page-dashboard">
       {user.role === "inspector" && assignedTasks.length > 0 && (
         <div onClick={() => setPage("alerts")} className="pulse-urgent" style={{
-          background: "rgba(168, 85, 247, 0.08)",
-          border: "1px solid rgba(168, 85, 247, 0.25)",
+          background: C.purpleLight,
+          border: `2px solid ${C.purple}40`,
           borderRadius: 16,
           padding: "16px 20px",
           marginBottom: 20,
@@ -775,8 +796,8 @@ function Dashboard({user,reports,businesses,users,setPage,tasks}){
 
       {urgentPending.length > 0 && (
         <div onClick={() => setPage("alerts")} className="pulse-urgent" style={{
-          background: "rgba(244, 63, 94, 0.08)",
-          border: "1px solid rgba(244, 63, 94, 0.25)",
+          background: C.redLight,
+          border: `2px solid ${C.red}35`,
           borderRadius: 16,
           padding: "16px 20px",
           marginBottom: 20,
@@ -789,11 +810,11 @@ function Dashboard({user,reports,businesses,users,setPage,tasks}){
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={{ fontSize: 24 }}>⏰</span>
             <div>
-              <div style={{ color: "#fca5a5", fontWeight: 700, fontSize: 15 }}>נדרשות ביקורות דחופות!</div>
+              <div style={{ color: "#c62828", fontWeight: 700, fontSize: 15 }}>נדרשות ביקורות דחופות!</div>
               <div style={{ color: C.textMuted, fontSize: 13 }}>יש לך {urgentPending.length} משימות ביקורת דחופות הממתינות לביצוע. לחץ כאן לצפייה בפרטים.</div>
             </div>
           </div>
-          <span style={{ color: "#fca5a5", fontSize: 18, marginRight: "auto" }}>←</span>
+          <span style={{ color: "#c62828", fontSize: 18, marginRight: "auto" }}>←</span>
         </div>
       )}
 
@@ -801,7 +822,7 @@ function Dashboard({user,reports,businesses,users,setPage,tasks}){
         <Stat icon="📋" value={myReports.length} label="סה״כ דיווחים" color={C.blue} delta={12} />
         <Stat icon="⭐" value={avg} label="ציון ממוצע" color={C.amber} delta={3} />
         <Stat icon="⚠️" value={low} label="עסקים בסיכון" color={C.red} delta={-5} />
-        <Stat icon="🔍" value={violations} label="סה״כ ממצאים" color={C.purple} delta={-8} />
+        <Stat icon="🔍" value={violations} label="סה״כ ממצאים" color={C.teal} delta={-8} />
       </div>
 
       <div style={{display:"grid",gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr",gap:16,marginBottom:16}}>
@@ -923,7 +944,7 @@ function ReportsPage({reports,businesses,users,filterInspectorId}){
                     <span style={{color:C.textDim,fontSize:12}}>👤 {insp?.name}</span>
                     <span style={{color:C.textDim,fontSize:12}}>📅 {r.date}</span>
                     <span style={{color:urgCol,fontSize:12}}>{urgIc} {r.urgency==="high"?"דחוף":r.urgency==="medium"?"בינוני":"רגיל"}</span>
-                    {r.violations.length>0&&<span style={{background:"rgba(239,68,68,0.1)",color:"#fca5a5",borderRadius:5,padding:"1px 8px",fontSize:11}}>{r.violations.length} ממצאים</span>}
+                    {r.violations.length>0&&<span style={{background:"rgba(239,68,68,0.1)",color:"#c62828",borderRadius:5,padding:"1px 8px",fontSize:11}}>{r.violations.length} ממצאים</span>}
                     {r.followUp&&<span style={{background:"rgba(245,158,11,0.1)",color:C.amber,borderRadius:5,padding:"1px 8px",fontSize:11}}>מעקב {r.followUp}</span>}
                   </div>
                   {r.observations&&<p style={{color:C.textDim,fontSize:12,margin:0,lineHeight:1.5,overflow:"hidden",textOverflow:"ellipsis",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{r.observations}</p>}
@@ -1017,10 +1038,10 @@ function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setRepo
                   </div>
                 </div>
                 <div style={{display:"flex",gap:8,width:isMobile?"100%":"auto",justifyContent:isMobile?"flex-end":"flex-start", flexWrap:"wrap"}}>
-                  <button onClick={()=>setReportingBiz(biz)} style={{background:"rgba(56,189,248,0.12)",border:"1px solid rgba(56,189,248,0.25)",borderRadius:7,padding:"5px 10px",color:"#38bdf8",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>📋 דווח</button>
+                  <button onClick={()=>setReportingBiz(biz)} style={{background:"rgba(56,189,248,0.12)",border:"1px solid rgba(56,189,248,0.25)",borderRadius:7,padding:"5px 10px",color:"#1976d2",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>📋 דווח</button>
                   {user.role==="admin"&&onAssignTask&&<button onClick={()=>setAssignBiz(biz)} style={{background:"rgba(168,85,247,0.12)",border:"1px solid rgba(168,85,247,0.25)",borderRadius:7,padding:"5px 10px",color:C.purple,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>🎯 משימה</button>}
                   <button onClick={()=>openEdit(biz)} style={{background:"rgba(255,255,255,0.07)",border:"none",borderRadius:7,padding:"5px 10px",color:C.textMuted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>עריכה</button>
-                  <button onClick={()=>deleteBiz(biz)} style={{background:"rgba(239,68,68,0.08)",border:"none",borderRadius:7,padding:"5px 10px",color:"#fca5a5",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>🗑 מחק</button>
+                  <button onClick={()=>deleteBiz(biz)} style={{background:"rgba(239,68,68,0.08)",border:"none",borderRadius:7,padding:"5px 10px",color:"#c62828",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>🗑 מחק</button>
                 </div>
               </div>
               <div style={{color:C.textDim,fontSize:12,marginBottom:4}}>📍 {biz.address}</div>
@@ -1048,13 +1069,13 @@ function BusinessesPage({businesses,setBusinesses,reports,users,setUsers,setRepo
             ))}
             <div>
               <label style={{color:C.textMuted,fontSize:12,display:"block",marginBottom:5}}>סוג עסק</label>
-              <select value={form.type} onChange={e=>setForm({...form,type:e.target.value})} style={{...inp,background:"#131f38"}}>
+              <select value={form.type} onChange={e=>setForm({...form,type:e.target.value})} style={{...inp,background:"#f8fafc"}}>
                 {BIZ_TYPES.map(t=><option key={t}>{t}</option>)}
               </select>
             </div>
             <div>
               <label style={{color:C.textMuted,fontSize:12,display:"block",marginBottom:5}}>רמת סיכון</label>
-              <select value={form.risk} onChange={e=>setForm({...form,risk:e.target.value})} style={{...inp,background:"#131f38"}}>
+              <select value={form.risk} onChange={e=>setForm({...form,risk:e.target.value})} style={{...inp,background:"#f8fafc"}}>
                 <option value="low">תקין</option>
                 <option value="medium">בינוני</option>
                 <option value="high">גבוה</option>
@@ -1137,7 +1158,7 @@ function UsersPage({users,setUsers,businesses,reports,user,setUser}){
               <div style={{flex:1,minWidth:0,width:"100%"}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3,flexWrap:"wrap"}}>
                   <span style={{color:C.text,fontWeight:700}}>{u.name}</span>
-                  <Tag color={u.role==="admin"?"#fca5a5":"#a5b4fc"} bg={u.role==="admin"?"rgba(239,68,68,0.1)":"rgba(99,102,241,0.1)"}>{u.role==="admin"?"👑 מנהל":"🔍 מפקח"}</Tag>
+                  <Tag color={u.role==="admin"?C.red:C.primary} bg={u.role==="admin"?C.redLight:C.primaryLight}>{u.role==="admin"?"👑 מנהל":"🔍 מפקח"}</Tag>
                   {!u.active&&<Tag color="#6b7280" bg="rgba(107,114,128,0.1)">מושהה</Tag>}
                 </div>
                 <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
@@ -1148,10 +1169,10 @@ function UsersPage({users,setUsers,businesses,reports,user,setUser}){
                 </div>
               </div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:isMobile?"flex-start":"flex-end",width:isMobile?"100%":"auto"}}>
-                {u.role==="inspector"&&<button onClick={()=>setPermModal(u)} style={{background:"rgba(16,185,129,0.1)",border:"1px solid rgba(16,185,129,0.2)",borderRadius:8,padding:"7px 12px",color:"#34d399",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>🔐 הרשאות</button>}
-                <button onClick={()=>openEdit(u)} style={{background:"rgba(99,102,241,0.1)",border:"1px solid rgba(99,102,241,0.2)",borderRadius:8,padding:"7px 12px",color:"#a5b4fc",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✏️ עריכה</button>
+                {u.role==="inspector"&&<button onClick={()=>setPermModal(u)} style={{background:C.tealLight,border:`1px solid ${C.teal}40`,borderRadius:8,padding:"7px 12px",color:C.teal,cursor:"pointer",fontSize:12,fontFamily:"inherit",fontWeight:600}}>🔐 הרשאות</button>}
+                <button onClick={()=>openEdit(u)} style={{background:C.primaryLight,border:`1px solid ${C.primary}40`,borderRadius:8,padding:"7px 12px",color:C.primary,cursor:"pointer",fontSize:12,fontFamily:"inherit",fontWeight:600}}>✏️ עריכה</button>
                 {u.role!=="admin"&&<button onClick={()=>toggle(u)} style={{background:u.active?"rgba(245,158,11,0.08)":"rgba(34,197,94,0.08)",border:`1px solid ${u.active?"rgba(245,158,11,0.2)":"rgba(34,197,94,0.2)"}`,borderRadius:8,padding:"7px 12px",color:u.active?C.amber:C.green,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>{u.active?"השהה":"הפעל"}</button>}
-                {u.role!=="admin"&&<button onClick={()=>del(u)} style={{background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",borderRadius:8,padding:"7px 12px",color:"#f87171",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>🗑</button>}
+                {u.role!=="admin"&&<button onClick={()=>del(u)} style={{background:C.redLight,border:`1px solid ${C.red}40`,borderRadius:8,padding:"7px 12px",color:C.red,cursor:"pointer",fontSize:12,fontFamily:"inherit",fontWeight:600}}>🗑</button>}
               </div>
             </div>
           );
@@ -1170,7 +1191,7 @@ function UsersPage({users,setUsers,businesses,reports,user,setUser}){
             ))}
             <div>
               <label style={{color:C.textMuted,fontSize:12,display:"block",marginBottom:5}}>תפקיד</label>
-              <select value={form.role} onChange={e=>setForm({...form,role:e.target.value})} style={{...inp,background:"#131f38"}}>
+              <select value={form.role} onChange={e=>setForm({...form,role:e.target.value})} style={{...inp,background:"#f8fafc"}}>
                 <option value="inspector">מפקח</option>
                 <option value="admin">מנהל</option>
               </select>
@@ -1180,7 +1201,7 @@ function UsersPage({users,setUsers,businesses,reports,user,setUser}){
               <label htmlFor="ua" style={{color:C.textMuted,fontSize:13,cursor:"pointer"}}>משתמש פעיל</label>
             </div>
           </div>
-          {err&&<div style={{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.22)",borderRadius:8,padding:"9px 14px",color:"#fca5a5",fontSize:13,marginTop:12}}>{err}</div>}
+          {err&&<div style={{background:"rgba(239,68,68,0.1)",border:"1px solid rgba(239,68,68,0.22)",borderRadius:8,padding:"9px 14px",color:"#c62828",fontSize:13,marginTop:12}}>{err}</div>}
           <div style={{display:"flex",gap:10,marginTop:20}}>
             <PrimaryBtn onClick={save} disabled={saving} style={{flex:1,justifyContent:"center",padding:12}}>{saving?"שומר...":"שמור"}</PrimaryBtn>
             <GhostBtn onClick={()=>setModal(null)}>ביטול</GhostBtn>
@@ -1192,7 +1213,7 @@ function UsersPage({users,setUsers,businesses,reports,user,setUser}){
         <Modal onClose={()=>setPermModal(null)} width={500}>
           <ModalHead title={`🔐 הרשאות — ${permModal.name}`} sub="סמן עסקים שהמפקח רשאי לבקר" onClose={()=>setPermModal(null)} />
           <div style={{marginBottom:12,display:"flex",gap:8}}>
-            <button onClick={()=>{const u={...permModal,assignedBusinesses:businesses.map(b=>b.id)};setPermModal(u);setUsers(prev=>prev.map(x=>x.id===u.id?u:x));}} style={{background:"rgba(59,130,246,0.1)",border:"1px solid rgba(59,130,246,0.2)",borderRadius:7,padding:"5px 12px",color:"#93c5fd",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>בחר הכל</button>
+            <button onClick={()=>{const u={...permModal,assignedBusinesses:businesses.map(b=>b.id)};setPermModal(u);setUsers(prev=>prev.map(x=>x.id===u.id?u:x));}} style={{background:"rgba(59,130,246,0.1)",border:"1px solid rgba(59,130,246,0.2)",borderRadius:7,padding:"5px 12px",color:"#1565c0",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>בחר הכל</button>
             <button onClick={()=>{const u={...permModal,assignedBusinesses:[]};setPermModal(u);setUsers(prev=>prev.map(x=>x.id===u.id?u:x));}} style={{background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:7,padding:"5px 12px",color:C.textMuted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>נקה הכל</button>
           </div>
           <div style={{display:"grid",gap:8,marginBottom:22}}>
@@ -1266,7 +1287,7 @@ function AssignTaskModal({ businesses, users, preselectedBusinessId, onAssign, o
       <div style={{ display: "grid", gap: 14 }}>
         <div>
           <label style={{ color: C.textMuted, fontSize: 12, display: "block", marginBottom: 5 }}>עסק לביקורת</label>
-          <select value={businessId} onChange={e => setBusinessId(e.target.value)} style={{ ...inp, background: "#131f38" }}>
+          <select value={businessId} onChange={e => setBusinessId(e.target.value)} style={{ ...inp, background: "#f8fafc" }}>
             {businesses.filter(b => b.active).map(b => (
               <option key={b.id} value={b.id}>{b.name} · {b.type}</option>
             ))}
@@ -1274,7 +1295,7 @@ function AssignTaskModal({ businesses, users, preselectedBusinessId, onAssign, o
         </div>
         <div>
           <label style={{ color: C.textMuted, fontSize: 12, display: "block", marginBottom: 5 }}>מפקח אחראי</label>
-          <select value={inspectorId} onChange={e => setInspectorId(e.target.value)} style={{ ...inp, background: "#131f38" }}>
+          <select value={inspectorId} onChange={e => setInspectorId(e.target.value)} style={{ ...inp, background: "#f8fafc" }}>
             {inspectors.map(u => (
               <option key={u.id} value={u.id}>{u.name} (@{u.username})</option>
             ))}
@@ -1296,7 +1317,7 @@ function AssignTaskModal({ businesses, users, preselectedBusinessId, onAssign, o
         </div>
       </div>
       {err && (
-        <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.22)", borderRadius: 8, padding: "9px 14px", color: "#fca5a5", fontSize: 13, marginTop: 12 }}>
+        <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.22)", borderRadius: 8, padding: "9px 14px", color: "#c62828", fontSize: 13, marginTop: 12 }}>
           {err}
         </div>
       )}
@@ -1550,7 +1571,7 @@ function AlertsPage({ notifs, setNotifs, tasks, setTasks, reports, setReports, b
                     <button onClick={() => setReportingBiz(businesses.find(b => b.id === item.businessId))}
                       style={{
                         padding: "10px 18px",
-                        background: "linear-gradient(135deg, #38bdf8, #6366f1)",
+                        background: "linear-gradient(135deg, #1976d2, #6366f1)",
                         border: "none",
                         borderRadius: 10,
                         color: "#fff",
@@ -1594,7 +1615,7 @@ function AlertsPage({ notifs, setNotifs, tasks, setTasks, reports, setReports, b
                 alignItems: "center",
                 opacity: n.read ? 0.65 : 1,
                 borderColor: n.read ? C.cardBorder : `${typeColor[n.type] || C.blue}30`,
-                background: n.read ? "rgba(17, 24, 39, 0.3)" : "rgba(17, 24, 39, 0.55)",
+                background: n.read ? "#f8fafc" : "#fff",
                 transition: "all 0.2s"
               }}>
                 <span style={{ fontSize: 22, flexShrink: 0 }}>{typeIcon[n.type] || "💬"}</span>
@@ -1605,12 +1626,12 @@ function AlertsPage({ notifs, setNotifs, tasks, setTasks, reports, setReports, b
                 <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                   {!n.read && (
                     <button onClick={() => setNotifs(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x))}
-                      style={{ background: "rgba(56,189,248,0.12)", border: "1px solid rgba(56,189,248,0.25)", borderRadius: 8, padding: "6px 12px", color: "#38bdf8", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "inherit" }}>
+                      style={{ background: "rgba(56,189,248,0.12)", border: "1px solid rgba(56,189,248,0.25)", borderRadius: 8, padding: "6px 12px", color: "#1976d2", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "inherit" }}>
                       קרא
                     </button>
                   )}
                   <button onClick={() => dismiss(n.id)}
-                    style={{ background: "rgba(244, 63, 94, 0.08)", border: "1px solid rgba(244, 63, 94, 0.25)", borderRadius: 8, padding: "6px 10px", color: "#fca5a5", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
+                    style={{ background: "rgba(244, 63, 94, 0.08)", border: "1px solid rgba(244, 63, 94, 0.25)", borderRadius: 8, padding: "6px 10px", color: "#c62828", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
                     ✕
                   </button>
                 </div>
@@ -1666,7 +1687,7 @@ function MyBusinesses({user,businesses,reports,onSaveReport}){
                 <div style={{color:C.textDim,fontSize:12,marginBottom:10}}>📞 {biz.phone}</div>
                 {last&&<div style={{color:C.textDim,fontSize:11,marginBottom:10}}>ביקורת אחרונה: {last.date} · {bizReports.length} ביקורות</div>}
                 <button onClick={()=>setSelected(biz)}
-                  style={{width:"100%",padding:10,background:"rgba(56,189,248,0.12)",border:"1px solid rgba(56,189,248,0.25)",borderRadius:10,color:"#38bdf8",cursor:"pointer",fontSize:14,fontWeight:600,fontFamily:"inherit",transition:"all 0.2s"}}>
+                  style={{width:"100%",padding:10,background:"rgba(56,189,248,0.12)",border:"1px solid rgba(56,189,248,0.25)",borderRadius:10,color:"#1976d2",cursor:"pointer",fontSize:14,fontWeight:600,fontFamily:"inherit",transition:"all 0.2s"}}>
                   📋 דווח ביקורת חדשה
                 </button>
               </div>
@@ -1808,71 +1829,59 @@ export default function App(){
   const nav=user.role==="admin"?adminNav:inspNav;
 
   return(
-    <div style={{display:"flex",minHeight:"100vh",background:`radial-gradient(circle at 50% 50%, #0c1428, #050811), ${C.bg}`,fontFamily:"'Segoe UI',Tahoma,Arial,sans-serif",direction:"rtl",color:C.text,paddingTop: isMobile ? 60 : 0}}>
+    <div className="app-shell" style={{display:"flex",minHeight:"100vh",background:`linear-gradient(160deg, ${C.bg} 0%, #dbeafe 45%, ${C.bgAlt} 100%)`,fontFamily:FONT,direction:"rtl",color:C.text,paddingTop: isMobile ? 64 : 0}}>
       <style>{`
-        ::-webkit-scrollbar {
-          width: 6px;
-          height: 6px;
+        .app-shell input:focus, .app-shell textarea:focus, .app-shell select:focus {
+          border-color: ${C.primary} !important;
+          box-shadow: 0 0 0 3px ${C.primaryLight} !important;
         }
-        ::-webkit-scrollbar-track {
-          background: #060a13;
-        }
-        ::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 255, 255, 0.2);
-        }
-        
+        .primary-btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(21,101,192,0.35) !important; }
+        .pill-btn:hover { border-color: ${C.primary} !important; color: ${C.primary} !important; }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: ${C.bgAlt}; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
         .glass-card {
-          background: rgba(17, 24, 39, 0.45) !important;
-          backdrop-filter: blur(16px) !important;
-          -webkit-backdrop-filter: blur(16px) !important;
-          border: 1px solid rgba(255, 255, 255, 0.08) !important;
-          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          background: #fff !important;
+          border: 1px solid ${C.cardBorder} !important;
+          box-shadow: ${C.cardShadow} !important;
+          transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s !important;
         }
         .glass-card:hover {
-          transform: translateY(-4px) !important;
-          border-color: rgba(56, 189, 248, 0.3) !important;
-          box-shadow: 0 12px 40px 0 rgba(56, 189, 248, 0.12) !important;
+          transform: translateY(-3px) !important;
+          border-color: ${C.primary}50 !important;
+          box-shadow: 0 8px 28px rgba(21,101,192,0.12) !important;
         }
-        
-        .sidebar-drawer {
-          animation: slideInRight 0.3s forwards;
-        }
-        
+
+        .sidebar-drawer { animation: slideInRight 0.3s forwards; }
+
         @keyframes slideInRight {
           from { transform: translateX(100%); }
           to { transform: translateX(0); }
         }
-        
+
         @keyframes pulse-glow {
-          0%, 100% { opacity: 0.85; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.4); }
-          50% { opacity: 1; box-shadow: 0 0 16px 6px rgba(244, 63, 94, 0.2); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(198,40,40,0.25); }
+          50% { box-shadow: 0 0 0 8px rgba(198,40,40,0.08); }
         }
-        .pulse-urgent {
-          animation: pulse-glow 2s infinite;
-        }
+        .pulse-urgent { animation: pulse-glow 2s infinite; border-radius: 14px; }
 
-        /* Mobile adjustments */
+        .mobile-nav-btn { transition: color 0.15s; }
+        .mobile-nav-btn.active { color: ${C.primary} !important; font-weight: 700 !important; }
+        .mobile-nav-btn.active .nav-dot { background: ${C.primary}; }
+
         @media (max-width: 768px) {
-          input, textarea, select { width: 100% !important; box-sizing: border-box; font-size: 16px; padding: 12px !important; }
-          /* Do not force every button to full width — allow layout-preserving buttons via .fullwidth when needed */
-          button { min-width: 0 !important; box-sizing: border-box; padding: 12px 14px !important; font-size: 16px; }
+          input, textarea, select { width: 100% !important; box-sizing: border-box; font-size: 16px !important; }
+          button { min-width: 0 !important; box-sizing: border-box; font-family: inherit; }
           button.fullwidth { width: 100% !important; }
-          .glass-card { padding: 14px !important; border-radius: 12px !important; }
+          .glass-card { padding: 16px !important; border-radius: 12px !important; }
           .sidebar-drawer { width: 100% !important; right: 0 !important; left: 0 !important; }
-          .sidebar-drawer nav button { text-align: right !important; padding: 12px 14px !important; }
-          .pulse-urgent { font-size: 14px; }
-          h1 { font-size: 18px !important; }
-          .modal-inner { width: 100% !important; padding: 18px !important; border-radius: 12px !important; max-height: 94vh !important; }
-
-          /* Page-specific tweaks (simplified, avoid brittle selectors) */
-          .page-dashboard .glass-card { margin-bottom: 10px; }
-          .page-reports .glass-card, .page-businesses .glass-card, .page-users .glass-card, .page-alerts .glass-card { width: 100% !important; display: block !important; }
-          .page-users .avatar, .page-reports .avatar { margin-bottom: 8px; }
+          .sidebar-drawer nav button { text-align: right !important; }
+          h1 { font-size: 20px !important; }
+          .modal-inner { width: 100% !important; padding: 20px !important; border-radius: 16px 16px 0 0 !important; max-height: 94vh !important; }
+          .page-header-bar { padding: 14px 16px 12px !important; margin-bottom: 16px !important; }
         }
       `}</style>
 
@@ -1888,24 +1897,23 @@ export default function App(){
           top: 0,
           left: 0,
           right: 0,
-          height: 60,
-          background: C.sidebar,
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+          height: 64,
+          background: `linear-gradient(90deg, ${C.sidebar} 0%, ${C.sidebarDark} 100%)`,
+          borderBottom: `3px solid ${C.gold}`,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           padding: "0 16px",
           zIndex: 100,
-          direction: "rtl"
+          direction: "rtl",
+          boxShadow: "0 2px 16px rgba(30,58,95,0.2)",
         }}>
-          <button onClick={() => setMenuOpen(true)} style={{ background: "transparent", border: "none", color: C.text, fontSize: 24, cursor: "pointer", display: "flex", alignItems: "center" }}>☰</button>
+          <button onClick={() => setMenuOpen(true)} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 10, color: C.sidebarText, fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", width: 40, height: 40, justifyContent: "center" }}>☰</button>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg,#38bdf8,#6366f1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🏛️</div>
-            <span style={{ color: C.text, fontWeight: 800, fontSize: 15, letterSpacing: -0.2 }}>ביקורת עסקים</span>
+            <div style={{ width: 32, height: 32, borderRadius: 10, background: "linear-gradient(135deg,#ffc107,#ef6c00)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>🏛️</div>
+            <span style={{ color: C.sidebarText, fontWeight: 800, fontSize: 16, letterSpacing: -0.2 }}>ביקורת עסקים</span>
           </div>
-          <Avatar name={user.name} size={30} role={user.role} />
+          <Avatar name={user.name} size={32} role={user.role} />
         </div>
       )}
 
@@ -1918,51 +1926,52 @@ export default function App(){
             top: 0,
             right: 0,
             bottom: 0,
-            width: 260,
-            background: "#0d1428",
-            borderLeft: "1px solid rgba(255,255,255,0.06)",
-            boxShadow: "-4px 0 24px rgba(0,0,0,0.5)",
+            width: 280,
+            background: `linear-gradient(180deg, ${C.sidebar} 0%, ${C.sidebarDark} 100%)`,
+            borderLeft: "1px solid rgba(255,255,255,0.1)",
+            boxShadow: "-4px 0 32px rgba(30,58,95,0.3)",
             display: "flex",
             flexDirection: "column",
             zIndex: 160
           }}>
-            <div style={{ padding: "20px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ padding: "20px 16px", borderBottom: "1px solid rgba(255,255,255,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <Avatar name={user.name} size={32} role={user.role} />
+                <Avatar name={user.name} size={36} role={user.role} />
                 <div style={{ lineHeight: 1.2 }}>
-                  <div style={{ color: C.text, fontWeight: 700, fontSize: 13 }}>{user.name}</div>
-                  <div style={{ color: C.textDim, fontSize: 10 }}>{user.role === "admin" ? "מנהל מערכת" : "מפקח"}</div>
+                  <div style={{ color: C.sidebarText, fontWeight: 700, fontSize: 14 }}>{user.name}</div>
+                  <div style={{ color: C.sidebarMuted, fontSize: 11 }}>{user.role === "admin" ? "מנהל מערכת" : "מפקח"}</div>
                 </div>
               </div>
-              <button onClick={() => setMenuOpen(false)} style={{ background: "transparent", border: "none", color: C.textDim, fontSize: 18, cursor: "pointer" }}>✕</button>
+              <button onClick={() => setMenuOpen(false)} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: 8, color: C.sidebarText, fontSize: 18, cursor: "pointer", width: 36, height: 36 }}>✕</button>
             </div>
-            <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
+            <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
               {nav.map(n => (
                 <button key={n.key} onClick={() => { setPage(n.key); setMenuOpen(false); }}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: 10,
-                    padding: "12px 14px",
-                    borderRadius: 12,
+                    padding: "14px 16px",
+                    borderRadius: 10,
                     border: "none",
-                    background: page === n.key ? "rgba(56, 189, 248, 0.1)" : "transparent",
-                    color: page === n.key ? C.text : C.textMuted,
+                    background: page === n.key ? "rgba(255,255,255,0.14)" : "transparent",
+                    color: page === n.key ? C.sidebarText : C.sidebarMuted,
                     cursor: "pointer",
-                    fontSize: 14,
-                    fontWeight: page === n.key ? 600 : 400,
+                    fontSize: 15,
+                    fontWeight: page === n.key ? 700 : 500,
                     textAlign: "right",
                     fontFamily: "inherit",
                     position: "relative"
                   }}>
-                  <span style={{ fontSize: 18 }}>{n.icon}</span>
+                  <span style={{ fontSize: 20 }}>{n.icon}</span>
                   <span style={{ flex: 1 }}>{n.label}</span>
-                  {n.badge > 0 && <span style={{ background: C.red, color: "#fff", borderRadius: 10, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, padding: "0 5px", boxShadow: "0 2px 8px rgba(244,63,94,0.3)" }}>{n.badge}</span>}
+                  {n.badge > 0 && <span style={{ background: C.red, color: "#fff", borderRadius: 10, minWidth: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, padding: "0 6px" }}>{n.badge}</span>}
+                  {page === n.key && <div style={{ position: "absolute", left: 0, top: "18%", bottom: "18%", width: 4, background: C.gold, borderRadius: 2 }} />}
                 </button>
               ))}
             </nav>
-            <div style={{ padding: "16px 12px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <button onClick={() => { setUser(null); setMenuOpen(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 12, border: "none", background: "transparent", color: "#fca5a5", cursor: "pointer", fontSize: 13, fontFamily: "inherit" }}>
+            <div style={{ padding: "16px 12px", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+              <button onClick={() => { setUser(null); setMenuOpen(false); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "#ffcdd2", cursor: "pointer", fontSize: 14, fontFamily: "inherit", fontWeight: 600 }}>
                 <span>🚪</span><span>התנתק</span>
               </button>
             </div>
@@ -1973,11 +1982,10 @@ export default function App(){
       {/* Main Container */}
       <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0,overflowX:"hidden"}}>
         {/* Top Header Bar */}
-        <div style={{
-          padding: isMobile ? "16px 16px 0" : "20px 28px 0",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          marginBottom: 26,
-          paddingBottom: 16,
+        <div className="page-header-bar" style={{
+          ...pageHeaderStyle,
+          padding: isMobile ? "16px 16px 12px" : "20px 28px 16px",
+          marginBottom: isMobile ? 18 : 24,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -1985,14 +1993,14 @@ export default function App(){
           gap: 12
         }}>
           <div>
-            <h1 style={{color:C.text,margin:"0 0 2px",fontSize: isMobile ? 18 : 22,fontWeight:800,letterSpacing: -0.3}}>{pageTitle[page]||page}</h1>
-            <p style={{color:C.textDim,margin:0,fontSize:11}}>
+            <h1 style={{color:C.sidebar,margin:"0 0 4px",fontSize: isMobile ? 20 : 24,fontWeight:800,letterSpacing: -0.3}}>{pageTitle[page]||page}</h1>
+            <p style={{color:C.textMuted,margin:0,fontSize:13,fontWeight:500}}>
               {user.role==="admin"?`${reports.length} דיווחים · ${businesses.length} עסקים · ${users.filter(u=>u.role==="inspector").length} מפקחים`:`${user.assignedBusinesses?.length||0} עסקים מוקצים · ${reports.filter(r=>r.inspectorId===user.id).length} דיווחים`}
             </p>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            {unreadNotifs > 0 && <div style={{background:"rgba(244, 63, 94, 0.12)",border:"1px solid rgba(244, 63, 94, 0.2)",borderRadius:10,padding:"6px 12px",color:"#fca5a5",fontSize:12,fontWeight: 600,cursor:"pointer"}} onClick={()=>setPage("alerts")}>🔔 {unreadNotifs} התראות חדשות</div>}
-            <button onClick={()=>{if(window.confirm("לאפס את מסד הנתונים?")){resetDatabase();}}} style={{background:"transparent",border:"none",color:C.textDim,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>⚙ איפוס</button>
+            {unreadNotifs > 0 && <div style={{background:C.redLight,border:`2px solid ${C.red}40`,borderRadius:10,padding:"8px 14px",color:C.red,fontSize:12,fontWeight: 700,cursor:"pointer"}} onClick={()=>setPage("alerts")}>🔔 {unreadNotifs} התראות חדשות</div>}
+            <button onClick={()=>{if(window.confirm("לאפס את מסד הנתונים?")){resetDatabase();}}} style={{background:"#fff",border:`1px solid ${C.cardBorder}`,borderRadius:8,color:C.textMuted,cursor:"pointer",fontSize:12,fontFamily:"inherit",padding:"6px 12px",fontWeight:600}}>⚙ איפוס</button>
           </div>
         </div>
 
@@ -2007,16 +2015,19 @@ export default function App(){
           {page==="myReports"&&user.role==="inspector"&&<ReportsPage reports={reports} businesses={businesses} users={users} filterInspectorId={user.id} />}
         </div>
         {/* Footer */}
-        <div style={{padding:12,textAlign:"center",borderTop:"1px solid rgba(255,255,255,0.04)",color:C.textDim,fontSize:12}}>
+        <div style={{padding:12,textAlign:"center",borderTop:`1px solid ${C.cardBorder}`,color:C.textMuted,fontSize:12,background:"rgba(255,255,255,0.6)"}}>
           © {new Date().getFullYear()} Avihai Yosipovich — כל הזכויות שמורות
         </div>
-        {/* Mobile Bottom Navigation */}
         {isMobile && (
-          <div style={{position:"fixed",left:0,right:0,bottom:0,height:64,background:C.sidebar,display:"flex",justifyContent:"space-around",alignItems:"center",borderTop:"1px solid rgba(255,255,255,0.06)",zIndex:220}}>
+          <div style={{position:"fixed",left:0,right:0,bottom:0,height:68,background:"#fff",display:"flex",justifyContent:"space-around",alignItems:"center",borderTop:`1px solid ${C.cardBorder}`,zIndex:220,boxShadow:"0 -4px 20px rgba(30,58,95,0.08)",paddingBottom:"env(safe-area-inset-bottom)"}}>
             {nav.map(n=> (
-              <button key={n.key} onClick={()=>setPage(n.key)} style={{background:"transparent",border:"none",color:page===n.key?C.blue:C.textMuted,display:"flex",flexDirection:"column",alignItems:"center",gap:4,fontSize:12,cursor:"pointer"}}>
-                <div style={{fontSize:18}}>{n.icon}</div>
-                <div style={{fontSize:11}}>{n.label}</div>
+              <button key={n.key} onClick={()=>setPage(n.key)} className={`mobile-nav-btn${page===n.key?" active":""}`} style={{background:"transparent",border:"none",color:page===n.key?C.primary:C.textDim,display:"flex",flexDirection:"column",alignItems:"center",gap:2,fontSize:11,cursor:"pointer",padding:"6px 8px",minWidth:56}}>
+                <div style={{fontSize:22,position:"relative"}}>
+                  {n.icon}
+                  {n.badge>0&&<span style={{position:"absolute",top:-4,left:-8,background:C.red,color:"#fff",borderRadius:8,minWidth:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:800}}>{n.badge}</span>}
+                </div>
+                <div style={{fontSize:10,fontWeight:page===n.key?700:500}}>{n.label}</div>
+                <div className="nav-dot" style={{width:4,height:4,borderRadius:2,background:page===n.key?C.primary:"transparent",marginTop:2}} />
               </button>
             ))}
           </div>
