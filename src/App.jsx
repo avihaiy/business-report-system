@@ -527,6 +527,13 @@ function ReportDetailModal({report,businesses,users,onClose}){
         </div>
       )}
 
+      {report.photo&&(
+        <div style={{marginBottom:18}}>
+          <SectionTitle>📷 תמונה מהשטח</SectionTitle>
+          <img src={report.photo} alt="תמונה מהשטח" style={{width:"100%", borderRadius:12, maxHeight: 300, objectFit:"cover", border:"1px solid rgba(255,255,255,0.1)"}} />
+        </div>
+      )}
+
       {report.violations.length>0&&(
         <div style={{marginBottom:18}}>
           <SectionTitle>⚠ ממצאים והפרות ({report.violations.length})</SectionTitle>
@@ -569,14 +576,23 @@ function NewReportModal({business,user,onSave,onClose}){
   const[notes,setNotes]=useState("");
   const[urgency,setUrgency]=useState("low");
   const[followUp,setFollowUp]=useState("");
+  const[photo,setPhoto]=useState(null);
   const[saving,setSaving]=useState(false);
   const score=Math.round(Object.values(cats).reduce((a,b)=>a+b,0)/CATEGORIES.length*20);
 
   const catColor=v=>v>=4?C.green:v>=3?C.amber:C.red;
 
+  const handlePhotoCapture = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setPhoto(reader.result);
+    reader.readAsDataURL(file);
+  };
+
   const go=()=>{
     setSaving(true);
-    setTimeout(()=>onSave({businessId:business.id,inspectorId:user.id,date:new Date().toISOString().split("T")[0],score,status:"הושלם",urgency,violations:violations.filter(v=>v.trim()),observations,notes,categories:cats,followUp:followUp||null}),400);
+    setTimeout(()=>onSave({businessId:business.id,inspectorId:user.id,date:new Date().toISOString().split("T")[0],score,status:"הושלם",urgency,violations:violations.filter(v=>v.trim()),observations,notes,categories:cats,followUp:followUp||null,photo}),400);
   };
 
   return(
@@ -618,6 +634,22 @@ function NewReportModal({business,user,onSave,onClose}){
         <textarea value={observations} onChange={e=>setObs(e.target.value)} rows={4}
           placeholder="תאר בפירוט את מה שראית: מצב המקום, התנהגות העובדים, מצב ניקיון, ציוד, שלטים, מחסנים..."
           style={{...inp,resize:"vertical",lineHeight:1.7}} />
+      </div>
+
+      <div style={{marginBottom:18}}>
+        <SectionTitle>📷 צילום מהשטח (אופציונלי)</SectionTitle>
+        {photo ? (
+          <div style={{position:"relative"}}>
+            <img src={photo} alt="תמונה מצורפת" style={{width:"100%", borderRadius:12, maxHeight: 300, objectFit:"cover"}} />
+            <button onClick={() => setPhoto(null)} style={{position:"absolute", top:10, right:10, background:"rgba(0,0,0,0.6)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:"50%", width:36, height:36, color:"#fff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center"}}>✕</button>
+          </div>
+        ) : (
+          <label style={{display:"block", width:"100%", padding:"24px", background:"rgba(255,255,255,0.03)", border:"1px dashed rgba(255,255,255,0.15)", borderRadius:12, textAlign:"center", cursor:"pointer", color:C.textMuted, transition:"all 0.2s"}}>
+            <span style={{fontSize:28, display:"block", marginBottom:8}}>📸</span>
+            <span style={{fontSize:14}}>לחץ כאן כדי לצלם או לבחור תמונה מהנייד</span>
+            <input type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} style={{display:"none"}} />
+          </label>
+        )}
       </div>
 
       <div style={{marginBottom:18}}>
