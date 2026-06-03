@@ -2,27 +2,38 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, RadarChart, Radar, PolarGrid, PolarAngleAxis } from "recharts";
 
 // ════════════════════════════════════════════════════════════
-// STORAGE
+// STORAGE — localStorage is the primary data source.
+// An optional API server can be used for multi-device sync.
 // ════════════════════════════════════════════════════════════
-// API base is configurable via Vite env `VITE_API_BASE` or a global
-// `window.__API_BASE__` (useful when hosting frontend and backend separately).
 const API_BASE = (typeof window !== 'undefined' && window.__API_BASE__) || import.meta.env.VITE_API_BASE || '/api';
 
-async function dbSet(k,d){
-  try{
+// ── localStorage helpers (module-scope, never stale) ──
+const _storageKey = (key) => `brs:${key}`;
+function readLocal(key) {
+  try {
+    const raw = localStorage.getItem(_storageKey(key));
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function writeLocal(key, value) {
+  try { localStorage.setItem(_storageKey(key), JSON.stringify(value)); } catch {}
+}
+
+// ── Optional API helpers (silent-fail when no server) ──
+async function dbSet(k, d) {
+  try {
     await fetch(`${API_BASE}/${k}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(d)
     });
-  }catch{}
+  } catch {}
 }
-
-async function dbReset(){
-  try{
+async function dbReset() {
+  try {
     const res = await fetch(`${API_BASE}/reset`, { method: 'POST' });
     return res.ok;
-  }catch{return false;}
+  } catch { return false; }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -57,28 +68,27 @@ const SEED_NOTIFS=[
 const CATEGORIES=["היגיינה","בטיחות","תיעוד","שירות"];
 
 // ════════════════════════════════════════════════════════════
-// DB HOOK
+// DB HOOK — localStorage-first, optional API sync
 // ════════════════════════════════════════════════════════════
 function useDB(){
-  const[users,setU]=useState(SEED_USERS);
-  const[businesses,setB]=useState(SEED_BUSINESSES);
-  const[reports,setR]=useState(SEED_REPORTS);
-  const[notifs,setN]=useState(SEED_NOTIFS);
+  // ── Initialise from localStorage; fall back to SEED on first visit ──
+  const[users,setU]=useState(()=> readLocal('users') || SEED_USERS);
+  const[businesses,setB]=useState(()=> readLocal('businesses') || SEED_BUSINESSES);
+  const[reports,setR]=useState(()=> readLocal('reports') || SEED_REPORTS);
+  const[notifs,setN]=useState(()=> readLocal('notifs') || SEED_NOTIFS);
 
-  const storageKey=(key)=>`brs:${key}`;
-  const readLocal=(key)=>{
-    try{
-      const raw=localStorage.getItem(storageKey(key));
-      return raw?JSON.parse(raw):null;
-    }catch{return null;}
-  };
-  const writeLocal=(key,value)=>{
-    try{localStorage.setItem(storageKey(key),JSON.stringify(value));}catch{}
-  };
+  // ── Persist seed to localStorage on very first visit ──
+  useEffect(()=>{
+    if(!readLocal('users'))  writeLocal('users',  SEED_USERS);
+    if(!readLocal('businesses')) writeLocal('businesses', SEED_BUSINESSES);
+    if(!readLocal('reports')) writeLocal('reports', SEED_REPORTS);
+    if(!readLocal('notifs'))  writeLocal('notifs',  SEED_NOTIFS);
+  },[]);
 
+  // ── Try API server (optional). Only overwrite state if server has valid data ──
   useEffect(()=>{
     let active=true;
-    const loadData=async()=>{
+    const syncFromServer=async()=>{
       try{
         const [u,b,r,n]=await Promise.all([
           fetch(`${API_BASE}/users`),
@@ -86,32 +96,27 @@ function useDB(){
           fetch(`${API_BASE}/reports`),
           fetch(`${API_BASE}/notifs`)
         ]);
-
         if(!active) return;
-
-        const [usersData,businessesData,reportsData,notifsData]=await Promise.all([
-          u.ok?u.json():Promise.resolve(null),
-          b.ok?b.json():Promise.resolve(null),
-          r.ok?r.json():Promise.resolve(null),
-          n.ok?n.json():Promise.resolve(null)
+        const [ud,bd,rd,nd]=await Promise.all([
+          u.ok?u.json():null,
+          b.ok?b.json():null,
+          r.ok?r.json():null,
+          n.ok?n.json():null
         ]);
-
-        setU(Array.isArray(usersData)?usersData:readLocal('users')||SEED_USERS);
-        setB(Array.isArray(businessesData)?businessesData:readLocal('businesses')||SEED_BUSINESSES);
-        setR(Array.isArray(reportsData)?reportsData:readLocal('reports')||SEED_REPORTS);
-        setN(Array.isArray(notifsData)?notifsData:readLocal('notifs')||SEED_NOTIFS);
-      }catch(e){
-        console.warn('Failed to load server data', e);
-        setU(readLocal('users')||SEED_USERS);
-        setB(readLocal('businesses')||SEED_BUSINESSES);
-        setR(readLocal('reports')||SEED_REPORTS);
-        setN(readLocal('notifs')||SEED_NOTIFS);
+        // Only apply server data when it looks valid (array)
+        if(Array.isArray(ud)){ setU(ud); writeLocal('users',ud); }
+        if(Array.isArray(bd)){ setB(bd); writeLocal('businesses',bd); }
+        if(Array.isArray(rd)){ setR(rd); writeLocal('reports',rd); }
+        if(Array.isArray(nd)){ setN(nd); writeLocal('notifs',nd); }
+      }catch{
+        // No server — perfectly fine, localStorage is already loaded
       }
     };
-    loadData();
+    syncFromServer();
     return ()=>{active=false;};
   },[]);
 
+  // ── Wrapped setters: write to localStorage + push to API ──
   const mk=(setter,key)=>useCallback(fn=>{
     setter(prev=>{
       const next=typeof fn==='function'?fn(prev):fn;
@@ -126,22 +131,33 @@ function useDB(){
   const setReports=mk(setR,'reports');
   const setNotifs=mk(setN,'notifs');
 
+  // ── Reset to seed data (works with or without server) ──
   const resetDatabase=useCallback(async()=>{
-    const success=await dbReset();
-    if(success){
-      const [u,b,r,n]=await Promise.all([
-        fetch(`${API_BASE}/users`),
-        fetch(`${API_BASE}/businesses`),
-        fetch(`${API_BASE}/reports`),
-        fetch(`${API_BASE}/notifs`)
-      ]);
-      if(u.ok&&b.ok&&r.ok&&n.ok){
-        setU(await u.json());
-        setB(await b.json());
-        setR(await r.json());
-        setN(await n.json());
-      }
+    // Try server reset first
+    const serverOk = await dbReset();
+    if(serverOk){
+      try{
+        const [u,b,r,n]=await Promise.all([
+          fetch(`${API_BASE}/users`),
+          fetch(`${API_BASE}/businesses`),
+          fetch(`${API_BASE}/reports`),
+          fetch(`${API_BASE}/notifs`)
+        ]);
+        if(u.ok&&b.ok&&r.ok&&n.ok){
+          const [ud,bd,rd,nd]=await Promise.all([u.json(),b.json(),r.json(),n.json()]);
+          setU(ud); writeLocal('users',ud);
+          setB(bd); writeLocal('businesses',bd);
+          setR(rd); writeLocal('reports',rd);
+          setN(nd); writeLocal('notifs',nd);
+          return;
+        }
+      }catch{}
     }
+    // Fallback: reset locally from SEED
+    setU(SEED_USERS);  writeLocal('users',SEED_USERS);
+    setB(SEED_BUSINESSES); writeLocal('businesses',SEED_BUSINESSES);
+    setR(SEED_REPORTS); writeLocal('reports',SEED_REPORTS);
+    setN(SEED_NOTIFS);  writeLocal('notifs',SEED_NOTIFS);
   },[]);
 
   return{users,setUsers,businesses,setBusinesses,reports,setReports,notifs,setNotifs,resetDatabase};
