@@ -323,9 +323,10 @@ function Stat({icon,value,label,color,delta}){
 }
 
 function Modal({onClose,children,width=600}){
+  const isMobile = useIsMobile();
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,direction:"rtl",padding:16}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
-      <div className="modal-inner" style={{background:"#131f38",border:"1px solid rgba(255,255,255,0.1)",borderRadius:22,width,maxWidth:"96vw",maxHeight:"92vh",overflowY:"auto",padding:"32px 36px"}}>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.8)",display:"flex",alignItems:isMobile?"flex-end":"center",justifyContent:"center",zIndex:300,direction:"rtl",padding:isMobile?0:16}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <div className="modal-inner" style={{background:"#131f38",border:"1px solid rgba(255,255,255,0.1)",borderRadius:isMobile?"24px 24px 0 0":22,width:isMobile?"100%":width,maxWidth:"100vw",maxHeight:isMobile?"90vh":"92vh",overflowY:"auto",padding:isMobile?"24px 20px 40px":"32px 36px"}}>
         {children}
       </div>
     </div>
@@ -478,6 +479,7 @@ function Sidebar({user,page,setPage,notifCount,onLogout}){
 // REPORT DETAIL MODAL
 // ════════════════════════════════════════════════════════════
 function ReportDetailModal({report,businesses,users,onClose}){
+  const isMobile = useIsMobile();
   const biz=businesses.find(b=>b.id===report.businessId);
   const insp=users.find(u=>u.id===report.inspectorId);
   const radarData=CATEGORIES.map(c=>({cat:c,value:report.categories?.[c]||0}));
@@ -494,7 +496,7 @@ function ReportDetailModal({report,businesses,users,onClose}){
         {report.followUp&&<Tag color={C.amber} bg="rgba(245,158,11,0.1)">מעקב: {report.followUp}</Tag>}
       </div>
 
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:22}}>
+      <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:16,marginBottom:22}}>
         <div style={{...cardStyle,padding:16}}>
           <SectionTitle>ציונים לפי קטגוריה</SectionTitle>
           {CATEGORIES.map(c=>(
@@ -560,6 +562,7 @@ function ReportDetailModal({report,businesses,users,onClose}){
 // NEW REPORT MODAL
 // ════════════════════════════════════════════════════════════
 function NewReportModal({business,user,onSave,onClose}){
+  const isMobile = useIsMobile();
   const[cats,setCats]=useState({היגיינה:3,בטיחות:3,תיעוד:3,שירות:3});
   const[violations,setViolations]=useState([""]);
   const[observations,setObs]=useState("");
@@ -579,16 +582,16 @@ function NewReportModal({business,user,onSave,onClose}){
   return(
     <Modal onClose={onClose}>
       <ModalHead title="דיווח ביקורת חדשה" sub={`${business.name} · ${business.type}`} onClose={onClose} />
-      <div style={{display:"flex",gap:12,marginBottom:24,padding:"14px 18px",background:"rgba(255,255,255,0.04)",borderRadius:14,alignItems:"center"}}>
+      <div style={{display:"flex",gap:12,marginBottom:24,padding:"14px 18px",background:"rgba(255,255,255,0.04)",borderRadius:14,alignItems:isMobile?"flex-start":"center",flexDirection:isMobile?"column":"row"}}>
         <div style={{flex:1}}>
           <div style={{color:C.textDim,fontSize:11,marginBottom:4}}>ציון כולל מחושב</div>
           <ScoreBadge score={score} large />
         </div>
-        <div>
+        <div style={{width:isMobile?"100%":"auto"}}>
           <div style={{color:C.textDim,fontSize:11,marginBottom:6}}>רמת דחיפות</div>
-          <div style={{display:"flex",gap:6}}>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
             {[["low","🟢","רגיל"],["medium","🟡","בינוני"],["high","🔴","דחוף"]].map(([k,ic,l])=>(
-              <button key={k} onClick={()=>setUrgency(k)} style={{padding:"5px 11px",border:`1px solid ${urgency===k?"rgba(255,255,255,0.3)":"rgba(255,255,255,0.1)"}`,borderRadius:8,background:urgency===k?"rgba(255,255,255,0.12)":"transparent",color:urgency===k?C.text:C.textMuted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>{ic} {l}</button>
+              <button key={k} onClick={()=>setUrgency(k)} style={{flex:isMobile?1:"none",padding:"5px 11px",border:`1px solid ${urgency===k?"rgba(255,255,255,0.3)":"rgba(255,255,255,0.1)"}`,borderRadius:8,background:urgency===k?"rgba(255,255,255,0.12)":"transparent",color:urgency===k?C.text:C.textMuted,cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>{ic} {l}</button>
             ))}
           </div>
         </div>
@@ -596,7 +599,7 @@ function NewReportModal({business,user,onSave,onClose}){
 
       <div style={{marginBottom:22}}>
         <SectionTitle>ציון לפי קטגוריה (1–5)</SectionTitle>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+        <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:12}}>
           {CATEGORIES.map(c=>(
             <div key={c} style={{background:"rgba(255,255,255,0.04)",borderRadius:10,padding:"14px 16px"}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
@@ -630,7 +633,7 @@ function NewReportModal({business,user,onSave,onClose}){
         ))}
       </div>
 
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:18}}>
+      <div style={{display:"grid",gridTemplateColumns:isMobile?"1fr":"1fr 1fr",gap:12,marginBottom:18}}>
         <div>
           <SectionTitle>📅 תאריך מעקב</SectionTitle>
           <input type="date" value={followUp} onChange={e=>setFollowUp(e.target.value)} style={{...inp,colorScheme:"dark"}} />
