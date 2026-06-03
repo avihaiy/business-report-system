@@ -1,13 +1,16 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, RadarChart, Radar, PolarGrid, PolarAngleAxis } from "recharts";
 
-// ════════════════════════════════════════════════════════════
-// STORAGE — localStorage is the primary data source.
-// An optional API server can be used for multi-device sync.
-// ════════════════════════════════════════════════════════════
-const API_BASE = (typeof window !== 'undefined' && window.__API_BASE__) || import.meta.env.VITE_API_BASE || '/api';
+import { createClient } from '@supabase/supabase-js';
 
-// ── localStorage helpers (module-scope, never stale) ──
+// ════════════════════════════════════════════════════════════
+// STORAGE — Supabase Database (with Realtime Sync)
+// ════════════════════════════════════════════════════════════
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// ── localStorage helpers (fallback/optimistic sync) ──
 const _storageKey = (key) => `brs:${key}`;
 function readLocal(key) {
   try {
@@ -19,21 +22,28 @@ function writeLocal(key, value) {
   try { localStorage.setItem(_storageKey(key), JSON.stringify(value)); } catch {}
 }
 
-// ── Optional API helpers (silent-fail when no server) ──
 async function dbSet(k, d) {
   try {
-    await fetch(`${API_BASE}/${k}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(d)
-    });
-  } catch {}
+    if (supabaseUrl) {
+      await supabase.from('kv_store').upsert({ key: k, value: d });
+    }
+  } catch (err) {
+    console.error('Supabase write error:', err);
+  }
 }
 async function dbReset() {
   try {
-    const res = await fetch(`${API_BASE}/reset`, { method: 'POST' });
-    return res.ok;
+    if (supabaseUrl) {
+      await supabase.from('kv_store').upsert([
+        { key: 'users', value: SEED_USERS },
+        { key: 'businesses', value: SEED_BUSINESSES },
+        { key: 'reports', value: SEED_REPORTS },
+        { key: 'notifs', value: SEED_NOTIFS }
+      ]);
+      return true;
+    }
   } catch { return false; }
+  return false;
 }
 
 // ════════════════════════════════════════════════════════════
@@ -68,55 +78,68 @@ const SEED_NOTIFS=[
 const CATEGORIES=["היגיינה","בטיחות","תיעוד","שירות"];
 
 // ════════════════════════════════════════════════════════════
-// DB HOOK — localStorage-first, optional API sync
+// DB HOOK — Supabase sync with localStorage fallback
 // ════════════════════════════════════════════════════════════
 function useDB(){
-  // ── Initialise from localStorage; fall back to SEED on first visit ──
+  // ── Initialise from localStorage; fall back to SEED ──
   const[users,setU]=useState(()=> readLocal('users') || SEED_USERS);
   const[businesses,setB]=useState(()=> readLocal('businesses') || SEED_BUSINESSES);
   const[reports,setR]=useState(()=> readLocal('reports') || SEED_REPORTS);
   const[notifs,setN]=useState(()=> readLocal('notifs') || SEED_NOTIFS);
 
-  // ── Persist seed to localStorage on very first visit ──
-  useEffect(()=>{
-    if(!readLocal('users'))  writeLocal('users',  SEED_USERS);
-    if(!readLocal('businesses')) writeLocal('businesses', SEED_BUSINESSES);
-    if(!readLocal('reports')) writeLocal('reports', SEED_REPORTS);
-    if(!readLocal('notifs'))  writeLocal('notifs',  SEED_NOTIFS);
-  },[]);
-
-  // ── Try API server (optional). Only overwrite state if server has valid data ──
+  // ── Sync from Supabase and listen for realtime changes ──
   useEffect(()=>{
     let active=true;
-    const syncFromServer=async()=>{
-      try{
-        const [u,b,r,n]=await Promise.all([
-          fetch(`${API_BASE}/users`),
-          fetch(`${API_BASE}/businesses`),
-          fetch(`${API_BASE}/reports`),
-          fetch(`${API_BASE}/notifs`)
-        ]);
-        if(!active) return;
-        const [ud,bd,rd,nd]=await Promise.all([
-          u.ok?u.json():null,
-          b.ok?b.json():null,
-          r.ok?r.json():null,
-          n.ok?n.json():null
-        ]);
-        // Only apply server data when it looks valid (array)
-        if(Array.isArray(ud)){ setU(ud); writeLocal('users',ud); }
-        if(Array.isArray(bd)){ setB(bd); writeLocal('businesses',bd); }
-        if(Array.isArray(rd)){ setR(rd); writeLocal('reports',rd); }
-        if(Array.isArray(nd)){ setN(nd); writeLocal('notifs',nd); }
-      }catch{
-        // No server — perfectly fine, localStorage is already loaded
+    let channel;
+    const initSupabase=async()=>{
+      try {
+        if(!supabaseUrl) return;
+
+        // Fetch initial data
+        const { data, error } = await supabase.from('kv_store').select('key, value');
+        if (error) throw error;
+        
+        if (!active) return;
+        
+        // If empty, initialize seed data on Supabase
+        if (!data || data.length === 0) {
+           await dbReset();
+           return;
+        }
+
+        const kv = {};
+        data.forEach(row => kv[row.key] = row.value);
+
+        if(kv['users'] && Array.isArray(kv['users'])) { setU(kv['users']); writeLocal('users', kv['users']); }
+        if(kv['businesses'] && Array.isArray(kv['businesses'])) { setB(kv['businesses']); writeLocal('businesses', kv['businesses']); }
+        if(kv['reports'] && Array.isArray(kv['reports'])) { setR(kv['reports']); writeLocal('reports', kv['reports']); }
+        if(kv['notifs'] && Array.isArray(kv['notifs'])) { setN(kv['notifs']); writeLocal('notifs', kv['notifs']); }
+
+        // Subscribe to real-time changes
+        channel = supabase.channel('kv_sync')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'kv_store' }, payload => {
+              if(payload.new && payload.new.key && payload.new.value) {
+                const val = payload.new.value;
+                if(payload.new.key === 'users') { setU(val); writeLocal('users', val); }
+                if(payload.new.key === 'businesses') { setB(val); writeLocal('businesses', val); }
+                if(payload.new.key === 'reports') { setR(val); writeLocal('reports', val); }
+                if(payload.new.key === 'notifs') { setN(val); writeLocal('notifs', val); }
+              }
+          })
+          .subscribe();
+
+      } catch (err) {
+        console.error('Supabase load/sync error:', err);
       }
     };
-    syncFromServer();
-    return ()=>{active=false;};
+    initSupabase();
+    return ()=>{
+      active=false;
+      if(channel) supabase.removeChannel(channel);
+    };
   },[]);
 
-  // ── Wrapped setters: write to localStorage + push to API ──
+  // ── Wrapped setters: update local state & sync to Supabase ──
   const mk=(setter,key)=>useCallback(fn=>{
     setter(prev=>{
       const next=typeof fn==='function'?fn(prev):fn;
@@ -131,29 +154,9 @@ function useDB(){
   const setReports=mk(setR,'reports');
   const setNotifs=mk(setN,'notifs');
 
-  // ── Reset to seed data (works with or without server) ──
+  // ── Reset to seed data ──
   const resetDatabase=useCallback(async()=>{
-    // Try server reset first
-    const serverOk = await dbReset();
-    if(serverOk){
-      try{
-        const [u,b,r,n]=await Promise.all([
-          fetch(`${API_BASE}/users`),
-          fetch(`${API_BASE}/businesses`),
-          fetch(`${API_BASE}/reports`),
-          fetch(`${API_BASE}/notifs`)
-        ]);
-        if(u.ok&&b.ok&&r.ok&&n.ok){
-          const [ud,bd,rd,nd]=await Promise.all([u.json(),b.json(),r.json(),n.json()]);
-          setU(ud); writeLocal('users',ud);
-          setB(bd); writeLocal('businesses',bd);
-          setR(rd); writeLocal('reports',rd);
-          setN(nd); writeLocal('notifs',nd);
-          return;
-        }
-      }catch{}
-    }
-    // Fallback: reset locally from SEED
+    await dbReset();
     setU(SEED_USERS);  writeLocal('users',SEED_USERS);
     setB(SEED_BUSINESSES); writeLocal('businesses',SEED_BUSINESSES);
     setR(SEED_REPORTS); writeLocal('reports',SEED_REPORTS);
